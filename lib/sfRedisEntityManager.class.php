@@ -32,6 +32,9 @@ class sfRedisEntityManager
     public function retrieveByKey($key) {
         $type = $this->getClient()->type($key);
         
+        if($type == 'none')
+            return null;
+        
         if(!isset(self::$entity_classes[$type]))
             throw new sfRedisEntityManagerException('Unknown key type '.$type);
             
@@ -71,6 +74,6 @@ class sfRedisEntityManager
     
 }
 
-class sfRedisEntityManagerException extends Exception
+class sfRedisEntityManagerException extends sfRedisException
 {
 }

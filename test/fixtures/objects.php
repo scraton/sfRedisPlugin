@@ -34,11 +34,17 @@ class UserString extends sfRedisObject
 class BlogPost extends sfRedisObject
 {
     
-    /** @RedisCollection(has = "Comment", type = "many") */
+    /** @RedisKey */
+    protected $key;
+    
+    /** @RedisCollection(type = "set", has = "Comment") */
     protected $comments;
     
-    /** @RedisField(is_a = "User") */
+    /** @RedisField(type = "relation", is_a = "User") */
     protected $author;
+    
+    /** @RedisField */
+    protected $content;
     
 }
 
@@ -61,7 +67,7 @@ class Comment extends sfRedisObject
 class BlogPosts
 {
     
-    /** @RedisCollection(has = "BlogPost", type = "many") */
+    /** @RedisCollection(type = "zset", has = "BlogPost") */
     protected $posts;
     
 }

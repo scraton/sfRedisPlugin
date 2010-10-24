@@ -20,9 +20,11 @@ abstract class sfRedisObject implements Serializable
                 $this->__set($name, $this->$name);
                 unset($this->$name);
             } else if($property->hasAnnotation('RedisField')) {
+                $field = $property->getAnnotation('RedisField');
                 $this->_fields[] = array(
                     'name'    => $name,
-                    'type'    => $property->getAnnotation('RedisField')->type
+                    'type'    => $field->type,
+                    'is_a'	  => $field->is_a
                 );
                 // we need to remove it so any actions done to it will come here to __get and __set
                 $this->__set($name, $this->$name);
@@ -76,6 +78,10 @@ abstract class sfRedisObject implements Serializable
     
     public function setData($data = array()) {
         $this->_data = $data;
+    }
+    
+    public function getFields() {
+        return $this->_fields;
     }
     
     public function serialize() {

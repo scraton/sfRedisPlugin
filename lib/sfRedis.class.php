@@ -55,3 +55,6 @@ class sfRedis
   }
 }
 
+class sfRedisException extends Exception
+{
+}

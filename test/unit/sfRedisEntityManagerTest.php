@@ -82,4 +82,79 @@ require_once dirname(__FILE__).'/../fixtures/objects.php';
     $t->isa_ok($em->retrieveByKey('user:testuser'), 'UserString', '->retrieveByKey() returns a found User object');
     $t->is($em->retrieveByKey('user:testuser')->nickname, 'testuser', '->retrieveByKey() returns the correct User object');
     
+// should handle relations between objects
+
+    $t->comment('should handle relations between objects');
+    
+    $em   = sfRedisEntityManager::create();
+    
+    $user = new User();
+    $post = new BlogPost();
+    
+    $user->nickname = 'bobuser';
+    
+    $post->key     = 'post:1';
+    $post->content = 'This is a test.';
+    $post->author  = $user;
+    
+    try {
+        $em->persist($post);
+        unset($post);
+        
+        $post = $em->retrieveByKey('post:1');
+        
+        // first make sure we got the author object which is a User
+        $t->isa_ok($post->author, 'User', '->persist() saves a related User object with the BlogPost');
+        
+        // now ensure it is the correct User object
+        $t->is($post->author->nickname, 'bobuser', '->persist() saved the correct User object with the BlogPost');
+    } catch(sfRedisEntityManagerException $e) {
+        $t->fail('->persist() will succeed in saving the post along with the related user object');
+        throw $e;
+    }
+    
+// should handle relations of a one-to-many nature
+
+    $t->comment('should handle relations of a one-to-many nature');
+    
+    $em   = sfRedisEntityManager::create();
+    
+    $user = new User();
+    $post = new BlogPost();
+    
+    $user->nickname = 'bobuser';
+    
+    $post->key     = 'post:1';
+    $post->content = 'This is a test.';
+    $post->author  = $user;
+    
+    $comment = new Comment();
+    $comment->author  = 'Joe User';
+    $comment->content = 'Fantastic blog post!';
+    
+    try {
+        $post->comments->push($comment);
+        unset($comment);
+        $t->pass('->push() should work on a RedisCollection entity type');
+    } catch(Exception $e) {
+        $t->fail('->push() should work on a RedisCollection entity type');
+        throw $e;
+    }
+    
+    $comment = new Comment();
+    $comment->author  = 'Sally User';
+    $comment->content = 'This blog post is less than stellar.';
+    
+    $post->comments->push($comment);
+    unset($comment);
+    
+    try {
+        $em->persist($post);
+        unset($post);
+        $t->pass('->persist() should handle one-to-many relation object persistance');
+    } catch(sfRedisException $e) {
+        $t->fail('->persist() should handle one-to-many relation object persistance');
+        throw $e;
+    }
+    
     
