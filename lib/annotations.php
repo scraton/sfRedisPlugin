@@ -88,8 +88,8 @@ class RedisField extends Annotation
  */
 class RedisCollection extends Annotation
 {
+    public $type = 'set';
     public $has;
-    public $type;
 }
 
 /**

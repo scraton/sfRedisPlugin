@@ -82,6 +82,24 @@ require_once dirname(__FILE__).'/../fixtures/objects.php';
     $t->isa_ok($em->retrieveByKey('user:testuser'), 'UserString', '->retrieveByKey() returns a found User object');
     $t->is($em->retrieveByKey('user:testuser')->nickname, 'testuser', '->retrieveByKey() returns the correct User object');
     
+// should be able to persist a collection of data
+
+    $t->comment('should be able to store a collection of data');
+    
+    $em         = sfRedisEntityManager::create();
+    $collection = new sfRedisCollection();
+    
+    $collection->push('tag 1');
+    $collection->push('tag 2');
+    $collection->push('tag 3');
+    
+    try {
+        $t->ok($em->persist($collection), '->persist() can persist a collection of data');
+    } catch(sfRedisException $e) {
+        $t->fail('->persist() can persist a collection of data');
+        throw $e;
+    }
+    
 // should handle relations between objects
 
     $t->comment('should handle relations between objects');

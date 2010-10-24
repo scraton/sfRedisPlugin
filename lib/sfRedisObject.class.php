@@ -29,6 +29,16 @@ abstract class sfRedisObject implements Serializable
                 // we need to remove it so any actions done to it will come here to __get and __set
                 $this->__set($name, $this->$name);
                 unset($this->$name);
+            } else if($property->hasAnnotation('RedisCollection')) {
+                $field = $property->getAnnotation('RedisField');
+                $this->_fields[] = array(
+                    'name'    => $name,
+                    'type'    => $field->type,
+                    'has'     => $field->has
+                );
+                // we need to remove it so any actions done to it will come here to __get and __set
+                $this->__set($name, new sfRedisCollection($this->$name));
+                unset($this->$name);
             }
         }
     }
