@@ -23,14 +23,12 @@ abstract class sfRedisObject
      */
     private $_entity;
     
-    public function __construct($key = null, sfRedisEntityManager $em = null) {
+    public function __construct($key = null) {
         if(empty($this->_fields))
             $this->loadFields();
             
         $this->_key    = $key;
-        
-        $this->_em     = ($em !== null) ? $em : sfRedisEntityManager::create();
-        $this->_entity = new sfRedisHashEntity($this->_em, $this);
+        $this->_entity = new sfRedisHashEntity($this);
         
         if($this->_key !== null) {
             $type = $this->getEntity()->getType();

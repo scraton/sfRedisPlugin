@@ -5,20 +5,6 @@ abstract class sfRedisCollection implements Countable, IteratorAggregate, Serial
     
     protected $key;
     protected $data = array();
-    protected $field;
-    
-    public static function createForField(RedisCollection $field, $key = null) {
-        switch($field->type) {
-            case 'list':   $class = 'sfRedisListCollection'; break;
-            case 'set':    $class = 'sfRedisSetCollection';  break;
-            case 'zset':   $class = 'sfRedisZSetCollection'; break;
-            default:       $class = 'sfRedisListCollection'; break;
-        }
-        
-        $collection = new $class($key);
-        $collection->setField($field);
-        return $collection;
-    }
     
     public function __construct($key = null) {
         $this->key = $key;
@@ -30,14 +16,6 @@ abstract class sfRedisCollection implements Countable, IteratorAggregate, Serial
     
     public function getKey() {
         return $this->key;
-    }
-    
-    public function setField(RedisCollection $field) {
-        $this->field = $field;
-    }
-    
-    public function getField() {
-        return $this->field;
     }
     
     public function shift() {

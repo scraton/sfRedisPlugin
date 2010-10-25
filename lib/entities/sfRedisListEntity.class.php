@@ -3,14 +3,16 @@
 class sfRedisListEntity extends sfRedisEntity
 {
     
-    public function __construct(sfRedisEntityManager $em, sfRedisCollection $collection = null) {
-        $this->em    = $em;
+    public function __construct(sfRedisCollection $collection = null) {
         $this->value = $collection;
     }
     
-    public function load($key, Predis_Client $client = null) {
-        $client = ($client) ? $client : $this->getManager()->getClient();
-        return new sfRedisListCollection($key);
+    public function getCollection() {
+        return $this->getValue();
+    }
+    
+    public function getKey() {
+        return $this->getCollection()->getKey();
     }
     
     public function save(Predis_Client $client = null) {
@@ -21,18 +23,9 @@ class sfRedisListEntity extends sfRedisEntity
         $this->delete($client);
         
         foreach($this->value as $v)
-            $ret = $ret && $client->rpush($this->getKey(), $this->serialize($v));
+            $ret = $ret && $client->rpush($this->getKey(), $v);
             
         return $ret;
-    }
-    
-    protected function serialize($v) {
-        if($v instanceof sfRedisObject) {
-            $this->getManager()->persist($v);
-            return $v->getKey();
-        }
-        
-        return $v;
     }
     
 }

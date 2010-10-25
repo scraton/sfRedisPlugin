@@ -107,17 +107,18 @@ sfRedis::getClient()->flushdb();
         $t->fail('->persist() can persist a collection of data');
         throw $e;
     }
-    exit;
+    
     unset($collection);
     
+    $collection = new sfRedisListCollection('test:collection');
+    
     try {
-        $collection = $em->retrieveByKey('test:collection');
-        $t->is($collection->pop(), 'tag 3', '->retrieveByKey() retrieves a collection of data');
+        $t->is($collection[2], 'tag 3', 'new sfRedisListCollection(key) retrieves a collection of data');
     } catch(Exception $e) {
-        $t->fail('->retireveByKey() retrieves a collection of data');
+        $t->fail('new sfRedisListCollection(key) retrieves a collection of data');
         throw $e;
     }
-    
+    exit;
     sfRedis::getClient()->flushdb();
     
 // should handle relations between objects

@@ -3,6 +3,23 @@
 class sfRedisHashEntity extends sfRedisEntity
 {
     
+    /**
+     * @var sfRedisObject
+     */
+    protected $value;
+    
+    public function __construct(sfRedisObject $obj) {
+        $this->value = $obj;
+    }
+    
+    public function getObject() {
+        return $this->value;
+    }
+    
+    public function getKey() {
+        return $this->getObject()->getKey();
+    }
+    
     public function getType() {
         $type = parent::getType();
         

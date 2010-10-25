@@ -10,25 +10,16 @@ abstract class sfRedisEntity
     const TYPE_ZSET   = 'zset';
     const TYPE_HASH   = 'hash';
     
-    /**
-     * @var sfRedisEntityManager
-     */
-    protected $em    = null;
     protected $key   = null;
     protected $value = null;
     
     private $_pipe   = false;
     
-    public function __construct(sfRedisEntityManager $em, sfRedisObject $object = null) {
-        $this->em    = $em;
-        $this->value = $object;
-    }
-    
     /**
      * @return sfRedisEntityManager
      */
     public function getManager() {
-        return $this->em;
+        return sfRedisEntityManager::getInstance();
     }
     
     public function getClient() {
@@ -48,16 +39,10 @@ abstract class sfRedisEntity
         return $ret;
     }
     
-    public function getKey() {
-        return $this->getObject()->getKey();
-    }
-    
-    public function getObject() {
-        return $this->value;
-    }
+    abstract public function getKey();
     
     public function getValue() {
-        return serialize($this->getObject());
+        return $this->value;
     }
     
     public function getType() {

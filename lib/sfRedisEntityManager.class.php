@@ -22,6 +22,10 @@ class sfRedisEntityManager
         return new sfRedisEntityManager($connection);
     }
     
+    public static function getInstance($connection = 'default') {
+        return self::create($connection);
+    }
+    
     private function __construct($connection) {
         $this->conn = $connection;
     }
@@ -68,7 +72,7 @@ class sfRedisEntityManager
         if(!class_exists($class))
             throw new sfRedisEntityManagerException('RedisEntity specifies a class "'.$class.'" that does not exist');
         
-        $entity = new $class($this, $obj);
+        $entity = new $class($obj);
         
         return $entity->save();
     }
