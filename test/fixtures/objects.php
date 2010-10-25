@@ -15,30 +15,12 @@ class User extends sfRedisObject
     
 }
 
-/** @RedisEntity(class = "sfRedisStringEntity") */
-class UserString extends sfRedisObject
-{
-        
-    /** @RedisKey */
-    protected $key;
-    
-    /** @RedisField */
-    protected $nickname;
-    
-    /** @RedisField */
-    protected $email;
-    
-}
-
 /** @RedisEntity */
 class BlogPost extends sfRedisObject
 {
     
     /** @RedisKey */
     protected $key;
-    
-    /** @RedisCollection(type = "set", has = "Comment") */
-    protected $comments;
     
     /** @RedisField(type = "relation", is_a = "User") */
     protected $author;
@@ -51,6 +33,9 @@ class BlogPost extends sfRedisObject
 /** @RedisEntity */
 class Comment extends sfRedisObject
 {
+    
+    /** @RedisKey */
+    protected $key;
     
     /** @RedisField */
     protected $author;

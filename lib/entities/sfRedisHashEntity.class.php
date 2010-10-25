@@ -3,70 +3,66 @@
 class sfRedisHashEntity extends sfRedisEntity
 {
     
-    public function load($key, Predis_Client $client = null) {
-        $client = ($client) ? $client : $this->getManager()->getClient();
+    public function getType() {
+        $type = parent::getType();
         
-        $data = $client->hgetall($key);
-        
-        if(!class_exists($data['_obj']))
+        if($type != sfRedisEntity::TYPE_HASH)
             return false;
-            
-        $obj = new $data['_obj'];
         
-        $this->hydrate(&$obj, $data);
-        
-        return $obj;
+        return $this->getClient()->hget($this->getKey(), '_obj');
     }
     
-    protected function hydrate($obj, $data = array()) {
-        unset($data['_obj']);
+    public function get(RedisField $field) {
+        $value = $this->getClient()->hget($this->getKey(), $field->name);
         
-        foreach($obj->getFields() as $field) {
-            if(!isset($data[ $field['name'] ]))
-                continue;
+        switch($field->type) {
+            case 'relation':
+                $class = $field->is_a;
+                $value = new $class($value);
+                break;
                 
-            $k = $field['name'];
-            $v = &$data[$k];
-            
-            switch($field['type']) {
-                case 'relation':
-                    $v_obj = $this->getManager()->retrieveByKey($v);
-                    if(get_class($v_obj) == $field['is_a'])
-                        $v = $v_obj;
-                    else
-                        $v = null;
-                    break;
-                
-                case 'string':
-                default:
-                    continue;
-            }
+            case 'string':
+            default:
+                break;
         }
         
-        $obj->setData($data);
+        return $value;
+    }
+    
+    public function set(RedisField $field, $value) {
+        switch($field->type) {
+            case 'relation':
+                $this->getManager()->persist($value);
+                $value = $value->getKey();
+                break;
+                
+            case 'string':
+            default:
+                break;
+        }
+        
+        return $this->getClient()->hset($this->getKey(), $field->name, $value);
     }
     
     public function save(Predis_Client $client = null) {
         $client = ($client) ? $client : $this->getManager()->getClient();
         
+        if(!($client instanceof Predis_CommandPipeline))
+            $this->pipeline();
+        
         $key    = $this->getKey();
         $data   = $this->getObject()->getData();
         
-        foreach($data as $k => $v) {
-            if($v instanceof sfRedisObject) {
-                $this->getManager()->persist($v);
-                $data[$k] = $v->getKey();
-            }
+        foreach($this->getObject()->getFields() as $field) {
+            $k = $field->name;
+            $v = $data[$k];
+            
+            $this->set($field, $v);
         }
         
-        $data['_obj'] = get_class($this->getObject());
+        $this->getClient()->hset($this->getKey(), '_obj', get_class($this->getObject()));
         
-        return $client->hmset($key, $data);
-    }
-    
-    public function delete(Predis_Client $client = null) {
-        $client = ($client) ? $client : $this->getManager()->getClient();
-        $client->del($this->getKey());
+        return $this->executePipeline();
     }
     
 }

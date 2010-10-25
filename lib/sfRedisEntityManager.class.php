@@ -15,6 +15,7 @@ class sfRedisEntityManager
     protected static $entity_classes = array(
                                             'hash'	    => 'sfRedisHashEntity',
                                             'string'	=> 'sfRedisStringEntity',
+                                            'list'		=> 'sfRedisListEntity',
                                        );
     
     public static function create($connection = 'default') {
@@ -29,24 +30,24 @@ class sfRedisEntityManager
         return sfRedis::getClient($this->conn);
     }
     
-    public function retrieveByKey($key) {
-        $type = $this->getClient()->type($key);
-        
-        if($type == 'none')
-            return null;
-        
-        if(!isset(self::$entity_classes[$type]))
-            throw new sfRedisEntityManagerException('Unknown key type '.$type);
-            
-        $class = self::$entity_classes[$type];
-            
-        if(!class_exists($class))
-            throw new sfRedisEntityManagerException('Unable to load class '.$class.' for key type '.$type);
-            
-        $entity = new $class($this);
-        
-        return $entity->load($key);
-    }
+//    public function retrieveByKey($key) {
+//        $type = $this->getClient()->type($key);
+//        
+//        if($type == 'none')
+//            return null;
+//        
+//        if(!isset(self::$entity_classes[$type]))
+//            throw new sfRedisEntityManagerException('Unknown key type '.$type);
+//            
+//        $class = self::$entity_classes[$type];
+//            
+//        if(!class_exists($class))
+//            throw new sfRedisEntityManagerException('Unable to load class '.$class.' for key type '.$type);
+//            
+//        $entity = new $class($this);
+//        
+//        return $entity->load($key);
+//    }
     
     public function persist($obj) {
         $ref = new ReflectionAnnotatedClass($obj);
@@ -58,9 +59,9 @@ class sfRedisEntityManager
         
         if($entity === null)
             throw new sfRedisEntityManagerException('Attempting to persist a non-redis entity');
-            
-        if(!$ref->isSubclassOf('sfRedisObject'))
-            throw new sfRedisEntityManagerException('RedisEntity object is not a subclass of sfRedisObject');
+        
+        if(!($obj instanceof sfRedisObject) && !($obj instanceof sfRedisCollection))
+            throw new sfRedisEntityManagerException('RedisEntity object is not a subclass of sfRedisObject or sfRedisCollection');
             
         $class = $entity->class;
         

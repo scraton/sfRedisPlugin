@@ -5,9 +5,11 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(7, new lime_output_color());
+$t = new lime_test(10, new lime_output_color());
 
 require_once dirname(__FILE__).'/../fixtures/objects.php';
+
+sfRedis::getClient()->flushdb();
 
 // persist should fail when trying to persist a non-redis entity
 
@@ -30,6 +32,7 @@ require_once dirname(__FILE__).'/../fixtures/objects.php';
     $em   = sfRedisEntityManager::create();
     $user = new User();
     
+    $user->key      = 'user:bobuser';
     $user->nickname = 'bobuser';
     
     try {
@@ -55,39 +58,44 @@ require_once dirname(__FILE__).'/../fixtures/objects.php';
     
     unset($user);
     
-    $t->isa_ok($em->retrieveByKey('user:bobuser'), 'User', '->retrieveByKey() returns a found User object');
-    $t->is($em->retrieveByKey('user:bobuser')->nickname, 'bobuser', '->retrieveByKey() returns the correct User object');
+    $user = new User('user:bobuser');
     
-    sfRedis::getClient()->flushdb();
-    
-// should be able to store a StringEntity just the same as a HashEntity
-
-    $t->comment('should be able to store a StringEntity just the same as a HashEntity');
-    
-    $em   = sfRedisEntityManager::create();
-    $user = new UserString();
-    
-    $user->key      = 'user:testuser';
-    $user->nickname = 'testuser';
-    
-    try {
-        $t->ok($em->persist($user), '->persist() is successful persisting an entity as a string');
-    } catch(sfRedisEntityManagerException $e) {
-        $t->fail('->persist() is successful when persisting an entity as a string');
-        throw $e;
-    }
+    $t->isa_ok($user, 'User', 'new User(key) returns a found User object');
+    $t->is($user->nickname, 'bobuser', 'new User(key) returns the correct User object');
     
     unset($user);
     
-    $t->isa_ok($em->retrieveByKey('user:testuser'), 'UserString', '->retrieveByKey() returns a found User object');
-    $t->is($em->retrieveByKey('user:testuser')->nickname, 'testuser', '->retrieveByKey() returns the correct User object');
+    // should not be able to load a User into a Comment
+
+    $user = new User();
+    
+    $user->key      = 'user:bobuser';
+    $user->nickname = 'bobuser'; 
+    
+    $em->persist($user);
+    
+    $comment = new Comment();
+    
+    $comment->key = 'test:comment';
+    $comment->content = 'This is a test.';
+    
+    $em->persist($comment);
+    
+    try {
+        $user = new User('test:comment');
+        $t->fail('new User(key) threw an exception since you can\'t load a Comment into a User');
+    } catch(sfRedisException $e) {
+        $t->pass('new User(key) threw an exception since you can\'t load a Comment into a User');
+    }
+    
+    sfRedis::getClient()->flushdb();
     
 // should be able to persist a collection of data
 
     $t->comment('should be able to store a collection of data');
     
     $em         = sfRedisEntityManager::create();
-    $collection = new sfRedisCollection();
+    $collection = new sfRedisListCollection('test:collection');
     
     $collection->push('tag 1');
     $collection->push('tag 2');
@@ -99,6 +107,18 @@ require_once dirname(__FILE__).'/../fixtures/objects.php';
         $t->fail('->persist() can persist a collection of data');
         throw $e;
     }
+    exit;
+    unset($collection);
+    
+    try {
+        $collection = $em->retrieveByKey('test:collection');
+        $t->is($collection->pop(), 'tag 3', '->retrieveByKey() retrieves a collection of data');
+    } catch(Exception $e) {
+        $t->fail('->retireveByKey() retrieves a collection of data');
+        throw $e;
+    }
+    
+    sfRedis::getClient()->flushdb();
     
 // should handle relations between objects
 
@@ -109,6 +129,7 @@ require_once dirname(__FILE__).'/../fixtures/objects.php';
     $user = new User();
     $post = new BlogPost();
     
+    $user->key      = 'user:bobuser';
     $user->nickname = 'bobuser';
     
     $post->key     = 'post:1';
@@ -116,20 +137,19 @@ require_once dirname(__FILE__).'/../fixtures/objects.php';
     $post->author  = $user;
     
     try {
-        $em->persist($post);
-        unset($post);
-        
-        $post = $em->retrieveByKey('post:1');
-        
-        // first make sure we got the author object which is a User
-        $t->isa_ok($post->author, 'User', '->persist() saves a related User object with the BlogPost');
-        
-        // now ensure it is the correct User object
-        $t->is($post->author->nickname, 'bobuser', '->persist() saved the correct User object with the BlogPost');
+        $t->ok($em->persist($post), '->persist() will succeed in saving the post along with the related User object');
     } catch(sfRedisEntityManagerException $e) {
-        $t->fail('->persist() will succeed in saving the post along with the related user object');
+        $t->fail('->persist() will succeed in saving the post along with the related User object');
         throw $e;
     }
+    
+    unset($post, $user);
+    
+    $post = new BlogPost('post:1');
+    
+    $t->is($post->author->nickname, 'bobuser', 'new BlogPost(key) will load the correct related User object when requested');
+    
+    sfRedis::getClient()->flushdb();
     
 // should handle relations of a one-to-many nature
 
@@ -150,29 +170,32 @@ require_once dirname(__FILE__).'/../fixtures/objects.php';
     $comment->author  = 'Joe User';
     $comment->content = 'Fantastic blog post!';
     
-    try {
-        $post->comments->push($comment);
-        unset($comment);
-        $t->pass('->push() should work on a RedisCollection entity type');
-    } catch(Exception $e) {
-        $t->fail('->push() should work on a RedisCollection entity type');
-        throw $e;
-    }
+    $post->comments->push($comment);
+    
+    unset($comment);
     
     $comment = new Comment();
     $comment->author  = 'Sally User';
     $comment->content = 'This blog post is less than stellar.';
     
     $post->comments->push($comment);
+    
     unset($comment);
     
     try {
-        $em->persist($post);
-        unset($post);
-        $t->pass('->persist() should handle one-to-many relation object persistance');
-    } catch(sfRedisException $e) {
+        $t->ok($em->persist($post), '->persist() should handle one-to-many relation object persistance');
+    } catch(Exception $e) {
         $t->fail('->persist() should handle one-to-many relation object persistance');
         throw $e;
     }
     
+    unset($post);
+    
+    $post = $em->retrieveByKey('post:1');
+    
+    var_dump($post->comments);
+    
+    $t->is($post->comments[1]->author, 'Sally User', '->retrieveByKey() retrieved the comments along with the post');
+    
+    //sfRedis::getClient()->flushdb();
     

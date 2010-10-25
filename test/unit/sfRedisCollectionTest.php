@@ -11,7 +11,7 @@ $t = new lime_test(7, new lime_output_color());
 
     $t->comment('should be able to push and unshift data to the collection');
     
-    $collection = new sfRedisCollection();
+    $collection = new sfRedisListCollection();
     
     $collection->push('tag 1');
     $data = $collection->getData();
@@ -29,7 +29,7 @@ $t = new lime_test(7, new lime_output_color());
 
     $t->comment('should be able to push and unshift data to the collection');
     
-    $collection = new sfRedisCollection();
+    $collection = new sfRedisListCollection();
     
     $collection->push('tag 1');
     $collection->push('tag 2');
@@ -46,7 +46,7 @@ $t = new lime_test(7, new lime_output_color());
 
     $t->comment('should be able to iterate over the array of data');
     
-    $collection = new sfRedisCollection();
+    $collection = new sfRedisListCollection();
     
     $collection->push('tag 1');
     $collection->push('tag 2');
@@ -68,7 +68,7 @@ $t = new lime_test(7, new lime_output_color());
 
     $t->comment('should be able to count the data in the array');
     
-    $collection = new sfRedisCollection();
+    $collection = new sfRedisListCollection();
     
     $collection->push('tag 1');
     $collection->push('tag 2');
