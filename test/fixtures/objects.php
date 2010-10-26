@@ -31,6 +31,15 @@ class BlogPost extends sfRedisObject
 }
 
 /** @RedisEntity */
+class BlogPostCommentable extends BlogPost
+{
+    
+    /** @RedisCollection(type = "list", has = "Comment") */
+    protected $comments;
+    
+}
+
+/** @RedisEntity */
 class Comment extends sfRedisObject
 {
     
@@ -48,11 +57,6 @@ class Comment extends sfRedisObject
     
 }
 
-/** @RedisList */
-class BlogPosts
+class BrokenObject extends sfRedisObject
 {
-    
-    /** @RedisCollection(type = "zset", has = "BlogPost") */
-    protected $posts;
-    
 }

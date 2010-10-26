@@ -7,6 +7,7 @@ abstract class sfRedisObject
     
     private $_data      = array();
     private $_fields    = array();
+    private $_meta      = null;
     private $_keyField  = null;
     
     private $_key       = null;
@@ -26,52 +27,69 @@ abstract class sfRedisObject
     public function __construct($key = null) {
         if(empty($this->_fields))
             $this->loadFields();
+        if(empty($this->_meta))
+            $this->loadMeta();
             
         $this->_key    = $key;
-        $this->_entity = new sfRedisHashEntity($this);
+        $entity_class  = $this->_meta->entity;
         
-        if($this->_key !== null) {
-            $type = $this->getEntity()->getType();
-            
-            if($type == get_class($this))
-                $this->_persisted = true;
-            else if(!$type)
-                $this->_persisted = false;
-            else 
-                throw new sfRedisException('Attempting to load invalid type `'.$type.'` into sfRedisObject `'.get_class($this).'`');
-        }
+        if(!class_exists($entity_class))
+            throw new sfRedisException('Entity class `'.$entity_class.'` does not exist or was not loaded.');
+        
+        $this->_entity = new $entity_class($this);
+        $this->_entity->associate($this);
     }
     
     private function loadFields() {
         $ref = new ReflectionAnnotatedClass($this);
         foreach($ref->getProperties() as $property) {
-            $name = $property->getName();
+            $name       = $property->getName();
+            $annotation = self::findAnnotationForField($property);
             
-            if($property->hasAnnotation('RedisKey')) {
-                $this->_keyField = $name;                
-                // we need to remove it so any actions done to it will come here to __get and __set
+            $annotation->name = $name;
+            
+            if($annotation instanceof RedisKey) {
+                $this->_keyField = $name;
                 $this->__set($name, $this->$name);
-                unset($this->$name);
-            } else if($property->hasAnnotation('RedisField')) {
-                $field = $property->getAnnotation('RedisField');
-                $field->name = $name;
-                
-                $this->_fields[ $name ] = $field;
-                // we need to remove it so any actions done to it will come here to __get and __set
-                $this->__set($name, $this->$name);
-                unset($this->$name);
-            } else if($property->hasAnnotation('RedisCollection')) {
-                $field = $property->getAnnotation('RedisCollection');
-                $field->name = $name;
-                
-                $this->_fields[ $name ] = $field;
-                // we need to remove it so any actions done to it will come here to __get and __set
+            } else if($annotation instanceof RedisCollection) {
+                $this->_fields[$name] = $annotation;
                 $key = $this->getKey();
-                $collection = sfRedisCollection::createForField($field, "{$key}:{$name}");
+                
+                $collection_class = $annotation->class;
+                
+                if(!class_exists($collection_class))
+                    throw new sfRedisException('No such collection class `'.$collection_class.'`');
+                    
+                $annotation->has_type = (class_exists($annotation->has)) ? 'object' : $annotation->has_type;
+                
+                $collection = new $collection_class("{$key}:{$name}", $annotation);
+                
                 $this->__set($name, $collection);
-                unset($this->$name);
+            } else if($annotation instanceof RedisField) {
+                $this->_fields[$name] = $annotation;
+                $this->__set($name, $this->$name);
             }
+            
+            unset($this->$name);
         }
+    }
+    
+    private static function findAnnotationForField($property) {
+        $annotations = array('RedisKey', 'RedisField', 'RedisCollection');
+        foreach($annotations as $a)
+            if($property->hasAnnotation($a))
+                return $property->getAnnotation($a);
+    }
+    
+    private function loadMeta() {
+        $ref = new ReflectionAnnotatedClass($this);
+        foreach(sfRedisEntityManager::getEntitiesList() as $e)
+            if($ref->hasAnnotation($e)) {
+                $this->_meta = $ref->getAnnotation($e);
+                return;
+            }
+        // we couldn't find an entity type
+        throw new sfRedisException('`'.get_class($this).'` is not a RedisEntity');
     }
     
     public function get($field) {
@@ -106,26 +124,23 @@ abstract class sfRedisObject
         $this->set($field, $value);
     }
     
-    protected function _set($field, $value) {
-        $this->_data[$field] = $value;
+    protected function _set($fieldName, $value) {
+        $field = $this->_fields[ $fieldName ];
         
-        if($this->isPersisted())
+        $this->_data[$fieldName] = $value;
+        
+        if($field !== null && $this->isPersisted())
             $this->getEntity()->set($field, $value);
     }
     
-    public function isPersisted() {
-        return ($this->_persisted);
+    public function isPersisted($set = null) {
+        if($set !== null)
+            $this->_persisted = $set;
+        else
+            return ($this->_persisted);
     }
 
     public function getKey() {
-        if($this->_key !== null)
-            return $this->_key;
-            
-//        $id  = $this->get('id');
-//        $id  = ($id === null) ? sfRedis::getClient()->incr(sprintf(self::INCID_KEY, get_class($this))) : $id;
-        
-        $this->_key = sprintf('%s:%s', get_class($this), $id);
-        
         return $this->_key;
     }
     

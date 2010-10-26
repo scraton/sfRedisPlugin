@@ -12,7 +12,7 @@
  */
 class RedisEntity extends Annotation
 {
-    public $class = 'sfRedisHashEntity';
+    public $entity = 'sfRedisHashEntity';
 }
 
 /**
@@ -27,7 +27,10 @@ class RedisEntity extends Annotation
  */
 class RedisList extends RedisEntity
 {
-    public $class = 'sfRedisListEntity';
+    public $entity   = 'sfRedisListEntity';
+    public $type     = 'list';
+    public $has_type = 'string';
+    public $has;
 }
 
 /**
@@ -42,7 +45,10 @@ class RedisList extends RedisEntity
  */
 class RedisSet extends RedisEntity
 {
-    public $class = 'sfRedisSetEntity';
+    public $entity   = 'sfRedisSetEntity';
+    public $type     = 'set';
+    public $has_type = 'string';
+    public $has;
 }
 
 /**
@@ -57,7 +63,10 @@ class RedisSet extends RedisEntity
  */
 class RedisZSet extends RedisEntity
 {
-    public $class = 'sfRedisZSetEntity';
+    public $entity   = 'sfRedisZSetEntity';
+    public $type     = 'zset';
+    public $has_type = 'string';
+    public $has;
 }
 
 /**
@@ -86,9 +95,12 @@ class RedisField extends Annotation
  *
  * @Target("property")
  */
-class RedisCollection extends Annotation
+class RedisCollection extends RedisField
 {
-    public $type = 'list';
+    public $class    = 'sfRedisListCollection';
+    public $entity   = 'sfRedisListEntity';
+    public $type     = 'list';
+    public $has_type = 'string';
     public $has;
 }
 

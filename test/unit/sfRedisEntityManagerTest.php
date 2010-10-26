@@ -5,7 +5,7 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(10, new lime_output_color());
+$t = new lime_test(12, new lime_output_color());
 
 require_once dirname(__FILE__).'/../fixtures/objects.php';
 
@@ -23,6 +23,15 @@ sfRedis::getClient()->flushdb();
         $t->fail('->persist() should fail when trying to persist a non-redis entity');
     } catch(sfRedisEntityManagerException $e) {
         $t->pass('->persist() should fail when trying to persist a non-redis entity');
+    }
+    
+    // this one extends the sfRedisObject but lacks a doc-comment
+    
+    try {
+        $broken = new BrokenObject();
+        $t->fail('threw an exception when trying to play with a non-redis entity');
+    } catch(sfRedisException $e) {
+        $t->pass('threw an exception when trying to play with a non-redis entity');
     }
     
 // persist should be successful when trying to persist a redis entity
@@ -118,7 +127,7 @@ sfRedis::getClient()->flushdb();
         $t->fail('new sfRedisListCollection(key) retrieves a collection of data');
         throw $e;
     }
-    exit;
+    
     sfRedis::getClient()->flushdb();
     
 // should handle relations between objects
@@ -159,8 +168,9 @@ sfRedis::getClient()->flushdb();
     $em   = sfRedisEntityManager::create();
     
     $user = new User();
-    $post = new BlogPost();
+    $post = new BlogPostCommentable('user:bobuser');
     
+    $user->key      = 'user:bobuser';
     $user->nickname = 'bobuser';
     
     $post->key     = 'post:1';
@@ -192,11 +202,9 @@ sfRedis::getClient()->flushdb();
     
     unset($post);
     
-    $post = $em->retrieveByKey('post:1');
+    $post = new BlogPostCommentable('post:1');
     
-    var_dump($post->comments);
-    
-    $t->is($post->comments[1]->author, 'Sally User', '->retrieveByKey() retrieved the comments along with the post');
+    $t->is($post->comments[1]->author, 'Sally User', 'new BlogPostCommentable(key) retrieved the comments along with the post');
     
     //sfRedis::getClient()->flushdb();
     

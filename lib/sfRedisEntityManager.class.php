@@ -11,7 +11,7 @@
 class sfRedisEntityManager
 {
     
-    protected static $entities = array('RedisEntity', 'RedisList', 'RedisSet', 'RedisZSet');
+    protected static $entities       = array('RedisEntity', 'RedisList', 'RedisSet', 'RedisZSet');
     protected static $entity_classes = array(
                                             'hash'	    => 'sfRedisHashEntity',
                                             'string'	=> 'sfRedisStringEntity',
@@ -24,6 +24,14 @@ class sfRedisEntityManager
     
     public static function getInstance($connection = 'default') {
         return self::create($connection);
+    }
+    
+    public static function getEntitiesList() {
+        return self::$entities;
+    }
+    
+    public static function getEntityClass($type) {
+        return self::$entity_classes[$type];
     }
     
     private function __construct($connection) {
@@ -57,7 +65,7 @@ class sfRedisEntityManager
         $ref = new ReflectionAnnotatedClass($obj);
         
         $entity = null;
-        foreach(self::$entities as $e)
+        foreach(self::getEntitiesList() as $e)
             if($ref->hasAnnotation($e))
                 $entity = $ref->getAnnotation($e);
         
@@ -67,7 +75,7 @@ class sfRedisEntityManager
         if(!($obj instanceof sfRedisObject) && !($obj instanceof sfRedisCollection))
             throw new sfRedisEntityManagerException('RedisEntity object is not a subclass of sfRedisObject or sfRedisCollection');
             
-        $class = $entity->class;
+        $class = $entity->entity;
         
         if(!class_exists($class))
             throw new sfRedisEntityManagerException('RedisEntity specifies a class "'.$class.'" that does not exist');

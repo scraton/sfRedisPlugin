@@ -15,6 +15,10 @@ abstract class sfRedisEntity
     
     private $_pipe   = false;
     
+    public static function getType($key) {
+        return sfRedisEntityManager::getInstance()->getClient()->type($key);
+    }
+    
     /**
      * @return sfRedisEntityManager
      */
@@ -39,21 +43,66 @@ abstract class sfRedisEntity
         return $ret;
     }
     
-    abstract public function getKey();
     
     public function getValue() {
         return $this->value;
     }
     
-    public function getType() {
-        return $this->getManager()->getClient()->type($this->getKey());
-    }
-    
-    abstract public function save(Predis_Client $client = null);
-    
-    public function delete(Predis_Client $client = null) {
+    public function delete() {
         $client = ($client) ? $client : $this->getManager()->getClient();
         $client->del($this->getKey());
     }
+    
+    protected function load_value($value, $type = 'string', $is_a = null) {
+        switch($type) {
+            case 'relation':
+            case 'object':
+                if(class_exists($is_a))
+                    $value = new $is_a($value);
+                else
+                    throw new sfRedisException('Attempting to load non-existent class `'.$is_a.'`');
+                break;
+                
+            case 'string':
+            default:
+                break;
+        }
+        
+        return $value;
+    }
+    
+    protected function save_value($value, $type = 'string', $is_a = null) {
+        switch($type) {
+            case 'relation':
+            case 'object':
+                $this->getManager()->persist($value);
+                $value = $value->getKey();
+                break;
+                
+            case 'list':
+            case 'set':
+            case 'zset':
+                $this->getManager()->persist($value);
+                $value = $value->getKey();
+                break;
+                
+            case 'datetime':
+                // TODO: timezone conversion
+                break;
+                
+            case 'string':
+            default:
+                break;
+        }
+        
+        if(is_object($value))
+            throw new sfRedisException('Value was not serialized in `'.get_class($this).'`');
+        
+        return $value;
+    }
+    
+    abstract public function getKey();
+    abstract public function save();
+    abstract public function associate($obj);
     
 }

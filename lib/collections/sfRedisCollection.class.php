@@ -1,71 +1,78 @@
 <?php
 
-abstract class sfRedisCollection implements Countable, IteratorAggregate, Serializable, ArrayAccess
+abstract class sfRedisCollection implements Countable, IteratorAggregate, ArrayAccess
 {
     
-    protected $key;
-    protected $data = array();
+    protected $_key;
+    protected $_data = array();
+    protected $_entity;
+    protected $_persisted;
     
-    public function __construct($key = null) {
-        $this->key = $key;
+    public function __construct($key = null, RedisCollection $meta = null) {
+        if($meta instanceof RedisCollection)
+            $this->_meta = $meta;
+        if($this->_meta === null)
+            $this->loadMeta();
+        
+        $this->_key    = $key;
+        $entity_class  = $this->_meta->entity;
+        
+        if(!class_exists($entity_class))
+            throw new sfRedisException('Entity class `'.$entity_class.'` does not exist or was not loaded.');
+        
+        $this->_entity = new $entity_class($this);
+        $this->_entity->associate($this);
+    }
+    
+    private function loadMeta() {
+        $ref = new ReflectionAnnotatedClass($this);
+        foreach(sfRedisEntityManager::getEntitiesList() as $e)
+            if($ref->hasAnnotation($e)) {
+                $this->_meta = $ref->getAnnotation($e);
+                break;
+            }
     }
     
     public function getData() {
-        return $this->data;
+        return $this->_data;
     }
     
     public function getKey() {
-        return $this->key;
+        return $this->_key;
+    }
+    
+    /**
+     * @return sfRedisListEntity
+     */
+    public function getEntity() {
+        return $this->_entity;
+    }
+    
+    public function getMeta() {
+        return $this->_meta;
+    }
+    
+    public function isPersisted($set = null) {
+        if($set !== null)
+            $this->_persisted = $set;
+        else
+            return $this->_persisted;
     }
     
     public function shift() {
-        return array_shift($this->data);
+        return array_shift($this->_data);
     }
     
     public function pop() {
-        return array_pop($this->data);
+        return array_pop($this->_data);
     }
     
     public function push($value) {
-        array_push($this->data, $value);
+        array_push($this->_data, $value);
     }
     
     public function unshift($value) {
-        array_unshift($this->data, $value);
+        array_unshift($this->_data, $value);
     }
-    
-    public function getIterator() {
-        $data = $this->data;
-        return new ArrayIterator($data);
-    }
-    
-    public function count() {
-        return count($this->data);
-    }
-
-    public function serialize() {
-        return serialize($this->data);
-    }
-
-    public function unserialize($serialized) {
-        $this->data = unserialize($serialized);
-    }
-
-    public function offsetExists($offset) {
-        return isset($this->data[$offset]);
-    }
-
-    public function offsetGet($offset) {
-        return $this->data[$offset];
-    }
-
-    public function offsetSet($offset, $value) {
-        return $this->data[$offset] = $value;
-    }
-
-    public function offsetUnset($offset) {
-        unset($this->data[$offset]);
-    }
-
-    
+        
 }
