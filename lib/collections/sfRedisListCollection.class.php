@@ -4,31 +4,19 @@
 class sfRedisListCollection extends sfRedisCollection
 {
     
-    public function __toString() {
-        throw new Exception('oops');
+    protected function _shift() {
+        return $this->getEntity()->shift();
     }
     
-    public function shift() {
-        $val = parent::shift();
-        if($this->isPersisted())
-            $val = $this->getEntity()->shift();
-        return $val;
+    protected function _pop() {
+        return $this->getEntity()->pop();
     }
     
-    public function pop() {
-        $val = parent::pop();
-        if($this->isPersisted())
-            $val = $this->getEntity()->pop();
-        return $val;
-    }
-    
-    public function push($value) {
-        parent::push($value);
+    protected function _push($value) {
         return $this->getEntity()->push($value);
     }
     
-    public function unshift($value) {
-        parent::unshift($value);
+    protected function _unshift($value) {
         return $this->getEntity()->unshift($value);
     }
     

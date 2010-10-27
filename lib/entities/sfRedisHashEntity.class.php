@@ -3,21 +3,8 @@
 class sfRedisHashEntity extends sfRedisEntity
 {
     
-    /**
-     * @var sfRedisObject
-     */
-    protected $value;
-    
-    public function __construct(sfRedisObject $obj) {
-        $this->value = $obj;
-    }
-    
     public function getObject() {
         return $this->value;
-    }
-    
-    public function getKey() {
-        return $this->getObject()->getKey();
     }
     
     public function getObjectType() {
@@ -49,31 +36,28 @@ class sfRedisHashEntity extends sfRedisEntity
         }
     }
     
-    public function get(RedisField $field) {
-        $value = $this->getClient()->hget($this->getKey(), $field->name);
-        return $this->load_value($value, $field->type, $field->is_a);
+    public function get(sfRedisField $field) {
+        return $this->getClient()->hget($this->getKey(), $field->name);
     }
     
-    public function set(RedisField $field, $value) {
-        $value = $this->save_value($value, $field->type, $field->is_a);
-        return $this->getClient()->hset($this->getKey(), $field->name, $value);
+    public function set(sfRedisField $field) {
+        return $this->getClient()->hset($this->getKey(), $field->name, $field->process());
     }
     
     public function save() {
         if(!($this->getClient() instanceof Predis_CommandPipeline))
             $this->pipeline();
         
-        $key    = $this->getKey();
-        $data   = $this->getObject()->getData();
+        if($this->getKey() === null)
+            throw new sfRedisException('Attempting to save `'.get_class($this->getObject()).'` with null key');
         
         foreach($this->getObject()->getFields() as $field) {
-            $k = $field->name;
-            $v = $data[$k];
-            
-            $this->set($field, $v);
+            $this->set($field);
         }
         
         $this->getClient()->hset($this->getKey(), '_obj', get_class($this->getObject()));
+        
+        $this->getObject()->isPersisted(true);
         
         return $this->executePipeline();
     }

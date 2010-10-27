@@ -3,6 +3,8 @@
 abstract class sfRedisEntity
 {
     
+    const INCID_KEY   = '%s:_inc_id';
+    
     const TYPE_NONE   = 'none';
     const TYPE_STRING = 'string';
     const TYPE_LIST   = 'list';
@@ -10,13 +12,16 @@ abstract class sfRedisEntity
     const TYPE_ZSET   = 'zset';
     const TYPE_HASH   = 'hash';
     
-    protected $key   = null;
     protected $value = null;
     
     private $_pipe   = false;
     
     public static function getType($key) {
         return sfRedisEntityManager::getInstance()->getClient()->type($key);
+    }
+    
+    public function __construct(sfRedisAbstract $obj) {
+        $this->value = $obj;
     }
     
     /**
@@ -43,14 +48,15 @@ abstract class sfRedisEntity
         return $ret;
     }
     
+    public function getKey() {
+        if(!method_exists($this->value, 'getKey'))
+            throw new sfRedisException('Cannot get key for object `'.get_class($this->value).'`');
+        
+        return $this->value->getKey();
+    }
     
     public function getValue() {
         return $this->value;
-    }
-    
-    public function delete() {
-        $client = ($client) ? $client : $this->getManager()->getClient();
-        $client->del($this->getKey());
     }
     
     protected function load_value($value, $type = 'string', $is_a = null) {
@@ -76,13 +82,14 @@ abstract class sfRedisEntity
             case 'relation':
             case 'object':
                 $this->getManager()->persist($value);
-                $value = $value->getKey();
+                $value = $value->getIndex();
                 break;
                 
             case 'list':
             case 'set':
             case 'zset':
-                $this->getManager()->persist($value);
+                if(!$value->isPersisted())
+                    $this->getManager()->persist($value);
                 $value = $value->getKey();
                 break;
                 
@@ -101,8 +108,16 @@ abstract class sfRedisEntity
         return $value;
     }
     
-    abstract public function getKey();
+    protected function incrId() {
+        return $this->getManager()->getClient()->incr(sprintf(self::INCID_KEY, get_class($this->value)));
+    }
+    
     abstract public function save();
     abstract public function associate($obj);
+    
+    public function delete() {
+        $client = ($client) ? $client : $this->getManager()->getClient();
+        $client->del($this->getKey());
+    }
     
 }

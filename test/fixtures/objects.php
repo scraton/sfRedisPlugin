@@ -3,15 +3,12 @@
 /** @RedisEntity */
 class User extends sfRedisObject
 {
-        
-    /** @RedisKey */
-    protected $key;
+    
+    /** @RedisIndex */
+    public $nickname;
     
     /** @RedisField */
-    protected $nickname;
-    
-    /** @RedisField */
-    protected $email;
+    public $email;
     
 }
 
@@ -19,14 +16,11 @@ class User extends sfRedisObject
 class BlogPost extends sfRedisObject
 {
     
-    /** @RedisKey */
-    protected $key;
-    
-    /** @RedisField(type = "relation", is_a = "User") */
-    protected $author;
+    /** @RedisRelation(is_a = "User") */
+    public $author;
     
     /** @RedisField */
-    protected $content;
+    public $content;
     
 }
 
@@ -35,7 +29,7 @@ class BlogPostCommentable extends BlogPost
 {
     
     /** @RedisCollection(type = "list", has = "Comment") */
-    protected $comments;
+    public $comments;
     
 }
 
@@ -43,17 +37,14 @@ class BlogPostCommentable extends BlogPost
 class Comment extends sfRedisObject
 {
     
-    /** @RedisKey */
-    protected $key;
+    /** @RedisField */
+    public $author;
     
     /** @RedisField */
-    protected $author;
-    
-    /** @RedisField */
-    protected $comment;
+    public $comment;
     
     /** @RedisField(type = "datetime") */
-    protected $posted_at;
+    public $posted_at;
     
 }
 

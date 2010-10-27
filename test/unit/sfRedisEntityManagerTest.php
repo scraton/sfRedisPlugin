@@ -5,7 +5,7 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(12, new lime_output_color());
+$t = new lime_test(11, new lime_output_color());
 
 require_once dirname(__FILE__).'/../fixtures/objects.php';
 
@@ -41,7 +41,6 @@ sfRedis::getClient()->flushdb();
     $em   = sfRedisEntityManager::create();
     $user = new User();
     
-    $user->key      = 'user:bobuser';
     $user->nickname = 'bobuser';
     
     try {
@@ -60,44 +59,18 @@ sfRedis::getClient()->flushdb();
     $em   = sfRedisEntityManager::create();
     $user = new User();
     
-    $user->key      = 'user:bobuser';
     $user->nickname = 'bobuser'; 
     
     $em->persist($user);
     
     unset($user);
     
-    $user = new User('user:bobuser');
+    $user = new User('bobuser');
     
     $t->isa_ok($user, 'User', 'new User(key) returns a found User object');
     $t->is($user->nickname, 'bobuser', 'new User(key) returns the correct User object');
     
     unset($user);
-    
-    // should not be able to load a User into a Comment
-
-    $user = new User();
-    
-    $user->key      = 'user:bobuser';
-    $user->nickname = 'bobuser'; 
-    
-    $em->persist($user);
-    
-    $comment = new Comment();
-    
-    $comment->key = 'test:comment';
-    $comment->content = 'This is a test.';
-    
-    $em->persist($comment);
-    
-    try {
-        $user = new User('test:comment');
-        $t->fail('new User(key) threw an exception since you can\'t load a Comment into a User');
-    } catch(sfRedisException $e) {
-        $t->pass('new User(key) threw an exception since you can\'t load a Comment into a User');
-    }
-    
-    sfRedis::getClient()->flushdb();
     
 // should be able to persist a collection of data
 
@@ -137,12 +110,10 @@ sfRedis::getClient()->flushdb();
     $em   = sfRedisEntityManager::create();
     
     $user = new User();
-    $post = new BlogPost();
+    $post = new BlogPost('post:1');
     
-    $user->key      = 'user:bobuser';
     $user->nickname = 'bobuser';
     
-    $post->key     = 'post:1';
     $post->content = 'This is a test.';
     $post->author  = $user;
     
@@ -159,6 +130,24 @@ sfRedis::getClient()->flushdb();
     
     $t->is($post->author->nickname, 'bobuser', 'new BlogPost(key) will load the correct related User object when requested');
     
+    unset($post);
+    sfRedis::getClient()->flushdb();
+    
+    // but I can also just directly accesss the User object without having to create it myself
+    
+    $post = new BlogPost('post:2');
+    
+    $post->content = 'Woot. A test.';
+    $post->author->nickname = 'bobuser';
+    
+    $em->persist($post);
+    
+    unset($post);
+    
+    $post = new BlogPost('post:2');
+    
+    $t->is($post->author->nickname, 'bobuser', 'new BlogPost(key) will load the correct related User object when requested');
+    
     sfRedis::getClient()->flushdb();
     
 // should handle relations of a one-to-many nature
@@ -167,17 +156,15 @@ sfRedis::getClient()->flushdb();
     
     $em   = sfRedisEntityManager::create();
     
-    $user = new User();
-    $post = new BlogPostCommentable('user:bobuser');
+    $user = new User('user:bobuser');
+    $post = new BlogPostCommentable('post:1');
     
-    $user->key      = 'user:bobuser';
     $user->nickname = 'bobuser';
     
-    $post->key     = 'post:1';
     $post->content = 'This is a test.';
     $post->author  = $user;
     
-    $comment = new Comment();
+    $comment = new Comment('comment:1');
     $comment->author  = 'Joe User';
     $comment->content = 'Fantastic blog post!';
     
@@ -204,7 +191,7 @@ sfRedis::getClient()->flushdb();
     
     $post = new BlogPostCommentable('post:1');
     
-    $t->is($post->comments[1]->author, 'Sally User', 'new BlogPostCommentable(key) retrieved the comments along with the post');
+    $t->is(count($post->comments), 2, 'new BlogPostCommentable(key) retrieved the comments along with the post');
     
     //sfRedis::getClient()->flushdb();
     

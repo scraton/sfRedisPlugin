@@ -3,16 +3,8 @@
 class sfRedisListEntity extends sfRedisEntity
 {
     
-    public function __construct(sfRedisCollection $collection = null) {
-        $this->value = $collection;
-    }
-    
     public function getCollection() {
         return $this->getValue();
-    }
-    
-    public function getKey() {
-        return $this->getCollection()->getKey();
     }
     
     public function associate($obj) {
@@ -74,6 +66,8 @@ class sfRedisListEntity extends sfRedisEntity
         foreach($data as $v) {
             $this->push($v);
         }
+        
+        $this->getCollection()->isPersisted(true);
         
         return $this->executePipeline();
     }
