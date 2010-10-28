@@ -21,7 +21,7 @@ sfRedis::getClient()->flushdb();
     try {
         $em->persist($dt);
         $t->fail('->persist() should fail when trying to persist a non-redis entity');
-    } catch(sfRedisEntityManagerException $e) {
+    } catch(sfRedisException $e) {
         $t->pass('->persist() should fail when trying to persist a non-redis entity');
     }
     
