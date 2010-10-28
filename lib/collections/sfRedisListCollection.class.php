@@ -13,11 +13,11 @@ class sfRedisListCollection extends sfRedisCollection
     }
     
     protected function _push($value) {
-        return $this->getEntity()->push($value);
+        return $this->getEntity()->push( $this->getField()->toRedis($value) );
     }
     
     protected function _unshift($value) {
-        return $this->getEntity()->unshift($value);
+        return $this->getEntity()->unshift( $this->getField()->toRedis($value) );
     }
     
     public function getIterator() {

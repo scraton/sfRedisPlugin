@@ -5,7 +5,7 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(12, new lime_output_color());
+$t = new lime_test(13, new lime_output_color());
 
 require_once dirname(__FILE__).'/../fixtures/objects.php';
 
@@ -192,6 +192,19 @@ sfRedis::getClient()->flushdb();
     $post = new BlogPostCommentable('post:1');
     
     $t->is(count($post->comments), 2, 'new BlogPostCommentable(key) retrieved the comments along with the post');
+    
+    // can even add to the list of comments after persisted
+    
+    $comment = new Comment();
+    $comment->author  = 'Sally User';
+    $comment->content = 'This comment sucks.';
+    
+    try {
+        $post->comments->push($comment);
+        $t->pass('->push() works on an associated collection even after being persisted');
+    } catch(Exception $e) {
+        $t->fail('->push() works on an associated collection even after being persisted');
+    }
     
     //sfRedis::getClient()->flushdb();
     

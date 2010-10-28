@@ -3,6 +3,8 @@
 abstract class sfRedisCollection extends sfRedisAbstract implements Countable, IteratorAggregate, ArrayAccess
 {
     
+    protected $_field;
+    
     protected function loadMeta() {
         parent::loadMeta();
     }
@@ -11,13 +13,14 @@ abstract class sfRedisCollection extends sfRedisAbstract implements Countable, I
      * @return sfRedisField
      */
     public function getField() {
-        if(class_exists($this->getMeta()->has)) {
-            $field       = new sfRedisRelationField($this->getKey());
-            $field->is_a = $this->getMeta()->has;
-        } else 
-            $field       = new sfRedisField($this->getKey());
+        if(!$this->_field)
+            if(class_exists($this->getMeta()->has)) {
+                $this->_field       = new sfRedisRelationField($this->getKey());
+                $this->_field->is_a = $this->getMeta()->has;
+            } else 
+                $this->_field       = new sfRedisField($this->getKey());
         
-        return $field;
+        return $this->_field;
     }
     
     public function shift() {
