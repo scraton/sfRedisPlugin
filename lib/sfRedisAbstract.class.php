@@ -78,8 +78,13 @@ abstract class sfRedisAbstract
             return ($this->_persisted);
     }
     
-    public function save() {
-        return $this->getEntity()->getManager()->persist($this);
+    public function toRedis() {
+        if($this->isPersisted())
+            return $this->getIndex();
+        else {
+            $this->getEntity()->getManager()->persist($this);
+            return $this->getIndex();
+        }
     }
     
 }

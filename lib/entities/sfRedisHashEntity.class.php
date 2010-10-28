@@ -36,12 +36,12 @@ class sfRedisHashEntity extends sfRedisEntity
         }
     }
     
-    public function get(sfRedisField $field) {
-        return $this->getClient()->hget($this->getKey(), $field->name);
+    public function get($field) {
+        return $this->getClient()->hget($this->getKey(), $field);
     }
     
-    public function set(sfRedisField $field) {
-        return $this->getClient()->hset($this->getKey(), $field->name, $field->process());
+    public function set($field, $value) {
+        return $this->getClient()->hset($this->getKey(), $field, $value);
     }
     
     public function save() {
@@ -50,9 +50,13 @@ class sfRedisHashEntity extends sfRedisEntity
         
         if($this->getKey() === null)
             throw new sfRedisException('Attempting to save `'.get_class($this->getObject()).'` with null key');
+            
+        $data = $this->getObject()->getData();
         
         foreach($this->getObject()->getFields() as $field) {
-            $this->set($field);
+            $value = $data[$field->name];
+            
+            $this->set($field->name, $field->toRedis($value));
         }
         
         $this->getClient()->hset($this->getKey(), '_obj', get_class($this->getObject()));

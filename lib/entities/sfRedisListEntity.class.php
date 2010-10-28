@@ -42,14 +42,10 @@ class sfRedisListEntity extends sfRedisEntity
     }
     
     public function push($v) {
-        $meta = $this->getCollection()->getMeta();
-        $v = $this->save_value($v, $meta->has_type, $meta->has);
         return $this->getClient()->rpush($this->getKey(), $v);
     }
     
     public function unshift($v) {
-        $meta = $this->getCollection()->getMeta();
-        $v = $this->save_value($v, $meta->has_type, $meta->has);
         return $this->getClient()->lpush($this->getKey(), $v);
     }
     
@@ -59,12 +55,13 @@ class sfRedisListEntity extends sfRedisEntity
         if(!($client instanceof Predis_CommandPipeline))
             $this->pipeline();
         
-        $key  = $this->getKey();
-        $data = $this->getCollection()->getData();
-        $meta = $this->getCollection()->getMeta();
+        $key   = $this->getKey();
+        $data  = $this->getCollection()->getData();
+        $meta  = $this->getCollection()->getMeta();
+        $field = $this->getCollection()->getField();
         
         foreach($data as $v) {
-            $this->push($v);
+            $this->push( $field->toRedis($v) );
         }
         
         $this->getCollection()->isPersisted(true);

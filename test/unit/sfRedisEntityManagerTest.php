@@ -5,7 +5,7 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(11, new lime_output_color());
+$t = new lime_test(12, new lime_output_color());
 
 require_once dirname(__FILE__).'/../fixtures/objects.php';
 

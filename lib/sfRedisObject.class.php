@@ -22,7 +22,13 @@ abstract class sfRedisObject extends sfRedisAbstract
                 $this->_indexField  = $name;
             
             if($annotation instanceof RedisField) {
-                $this->_fields[$name] = sfRedisField::createFromAnnotation($this, $name, $annotation);
+                if($annotation instanceof RedisCollection)
+                    $this->_fields[$name] = sfRedisCollectionField::createFromAnnotation($name, $annotation);
+                else if($annotation instanceof RedisRelation)
+                    $this->_fields[$name] = sfRedisRelationField::createFromAnnotation($name, $annotation);
+                else
+                    $this->_fields[$name] = sfRedisField::createFromAnnotation($name, $annotation);
+                    
                 $this->__set($name, $this->$name);
                 unset($this->$name);
             }
@@ -33,7 +39,7 @@ abstract class sfRedisObject extends sfRedisAbstract
     
     private function ensureIndexField() {
         if($this->_indexField === null) {
-            $this->_fields['_id'] = new sfRedisField($this, '_id');
+            $this->_fields['_id'] = new sfRedisField('_id');
             $this->_indexField    = '_id';
         }
     }
@@ -58,14 +64,15 @@ abstract class sfRedisObject extends sfRedisAbstract
     }
     
     protected function _get($fieldName) {
-        $field = $this->_fields[ $fieldName ];
-        if(!($field instanceof sfRedisField))
-            if(property_exists($this, $fieldName))
-                return $this->$fieldName;
-            else
-                return null;
-        else
-            return $field->getValue();
+        $field = $this->_fields[$fieldName];
+        if($field instanceof sfRedisField) {
+            if($this->isPersisted() && $this->_data[$fieldName] === null)
+                $this->_data[$fieldName] = $field->fromRedis( $this->getEntity()->get($fieldName) );
+            elseif($this->_data[$fieldName] === null)
+                $this->_data[$fieldName] = $field->getDefault();
+            return $this->_data[$fieldName];    
+        } else
+            return $this->$fieldName;
     }
     
     public function set($field, $value) {
@@ -80,11 +87,15 @@ abstract class sfRedisObject extends sfRedisAbstract
     }
     
     protected function _set($fieldName, $value) {
-        $field = $this->_fields[ $fieldName ];
-        if(!($field instanceof sfRedisField))
+        $field = $this->_fields[$fieldName];
+        
+        if($field instanceof sfRedisField) {
+            if($this->isPersisted())
+                $this->getEntity()->set($fieldName, $field->toRedis($value));
+            
+            $this->_data[$fieldName] = $value;
+        } else
             $this->$fieldName = $value;
-        else
-            $field->setValue($value);
     }
     
 }
