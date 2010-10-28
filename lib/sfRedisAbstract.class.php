@@ -71,6 +71,18 @@ abstract class sfRedisAbstract
         $this->_meta = $meta;
     }
     
+    public function prePersist() {
+        if($this->getIndex() === null) {
+            $client = sfRedis::getClient();
+            $id     = $client->incr(sprintf(self::INCID_KEY, get_class($this)));
+            $this->setIndex($id);
+        }
+    }
+    
+    public function postPersist() {
+        $this->isPersisted(true);
+    }
+    
     public function isPersisted($set = null) {
         if($set !== null)
             $this->_persisted = $set;

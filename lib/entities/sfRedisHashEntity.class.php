@@ -44,13 +44,10 @@ class sfRedisHashEntity extends sfRedisEntity
         return $this->getClient()->hset($this->getKey(), $field, $value);
     }
     
-    public function save() {
+    protected function _save() {
         if(!($this->getClient() instanceof Predis_CommandPipeline))
             $this->pipeline();
         
-        if($this->getKey() === null)
-            throw new sfRedisException('Attempting to save `'.get_class($this->getObject()).'` with null key');
-            
         $data = $this->getObject()->getData();
         
         foreach($this->getObject()->getFields() as $field) {
@@ -60,8 +57,6 @@ class sfRedisHashEntity extends sfRedisEntity
         }
         
         $this->getClient()->hset($this->getKey(), '_obj', get_class($this->getObject()));
-        
-        $this->getObject()->isPersisted(true);
         
         return $this->executePipeline();
     }

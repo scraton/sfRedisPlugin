@@ -112,7 +112,20 @@ abstract class sfRedisEntity
         return $this->getManager()->getClient()->incr(sprintf(self::INCID_KEY, get_class($this->value)));
     }
     
-    abstract public function save();
+    public function save() {
+        if($this->getKey() === null)
+            throw new sfRedisException('Attempting to save `'.get_class($this->getObject()).'` with null key');
+            
+        $this->getValue()->prePersist();
+            
+        $ret = $this->_save();
+        
+        $this->getValue()->postPersist();
+        
+        return $ret;
+    }
+    
+    abstract protected function _save();
     abstract public function associate($obj);
     
     public function delete() {

@@ -49,7 +49,7 @@ class sfRedisListEntity extends sfRedisEntity
         return $this->getClient()->lpush($this->getKey(), $v);
     }
     
-    public function save(Predis_Client $client = null) {
+    protected function _save(Predis_Client $client = null) {
         $client = ($client) ? $client : $this->getManager()->getClient();
         
         if(!($client instanceof Predis_CommandPipeline))
@@ -63,8 +63,6 @@ class sfRedisListEntity extends sfRedisEntity
         foreach($data as $v) {
             $this->push( $field->toRedis($v) );
         }
-        
-        $this->getCollection()->isPersisted(true);
         
         return $this->executePipeline();
     }
