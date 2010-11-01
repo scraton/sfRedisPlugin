@@ -28,9 +28,7 @@ abstract class sfRedisCollection extends sfRedisAbstract implements Countable, I
         return count($this->_data);
     }
     
-    public function current() {
-        return $this->offsetGet($this->_position);
-    }
+    abstract public function current();
     
     public function key() {
         return $this->_position;
@@ -44,8 +42,6 @@ abstract class sfRedisCollection extends sfRedisAbstract implements Countable, I
         $this->_position = 0;
     }
     
-    public function valid() {
-        return $this->offsetExists($this->_position);
-    }
+    abstract public function valid();
     
 }

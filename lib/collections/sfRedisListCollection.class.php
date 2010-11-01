@@ -64,4 +64,12 @@ class sfRedisListCollection extends sfRedisCollection implements ArrayAccess
         throw new sfRedisException('Cannot unset offset by index in a RedisList');
     }
     
+    public function current() {
+        return $this->offsetGet($this->_position);
+    }
+    
+    public function valid() {
+        return $this->offsetExists($this->_position);
+    }
+    
 }
