@@ -4,6 +4,9 @@
 class sfRedisSetCollection extends sfRedisCollection
 {
     
+    // use to iterate through this set
+    private $_iterator;
+    
     public function add() {
         $values = func_get_args();
         
@@ -42,7 +45,51 @@ class sfRedisSetCollection extends sfRedisCollection
     }
     
     public function getMembers() {
-        return $this->getData();
+        if($this->isPersisted()) {
+            $members = $this->getEntity()->getMembers();
+            if(is_array($members))
+                foreach($members as $i => $member) {
+                    $members[$i] = $this->getField()->fromRedis($member);
+                }
+            return $members;
+        } else
+            return $this->getData();
+    }
+    
+    private function initIterator() {
+        $this->_data     = $this->getMembers();
+        $this->_iterator = new ArrayIterator($this->_data);
+    }
+    
+    public function current() {
+        if(!$this->_iterator)
+            $this->initIterator();
+        return $this->_iterator->current();
+    }
+    
+    public function key() {
+        if(!$this->_iterator)
+            $this->initIterator();
+        return $this->_iterator->key();
+    }
+    
+    public function next() {
+        if(!$this->_iterator)
+            $this->initIterator();
+        return $this->_iterator->next();
+    }
+    
+    public function rewind() {
+        // we defo want to reset the iterator when rewinding
+        $this->initIterator();
+        
+        return $this->_iterator->rewind();
+    }
+    
+    public function valid() {
+        if(!$this->_iterator)
+            $this->initIterator();
+        return $this->_iterator->valid();
     }
     
 }

@@ -5,7 +5,7 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(16, new lime_output_color());
+$t = new lime_test(17, new lime_output_color());
 
 require_once dirname(__FILE__).'/../fixtures/objects.php';
 
@@ -236,5 +236,7 @@ sfRedis::getClient()->flushdb();
     
     $t->is(count($post->tags), 3, '->tags has the correct number of tags');
     $t->is($post->tags->isMember('omgwtfbbq'), true, '->tags has the correct omgwtfbbq tag as expected');
+    
+    $t->is(sort($post->tags->getMembers()), array('omgwtfbbq', 'test tag', 'rox my sox'), '->getMembers() returns an array of tags');
     
     sfRedis::getClient()->flushdb();

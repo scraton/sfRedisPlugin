@@ -5,7 +5,7 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(9, new lime_output_color());
+$t = new lime_test(12, new lime_output_color());
 
 sfRedis::getClient()->flushdb();
 
@@ -83,4 +83,31 @@ sfRedis::getClient()->flushdb();
     
     $t->ok($set->remove($user1) && !$set->isMember($user1), '->remove() removed the user from the set');
     
-    //sfRedis::getClient()->flushdb();
+    sfRedis::getClient()->flushdb();
+    
+// should be able to be traversed
+
+    $t->comment('should handle adding and removing objects');
+    
+    $set = new sfRedisSetCollection('test:set');
+    
+    $set->add('bob.saget', 'joe.user', 'sally.sue');
+    
+    sfRedisEntityManager::create()->persist($set);
+    
+    unset($set);
+    
+    $set = new sfRedisSetCollection('test:set');
+    
+    try {
+        // should iterate 3 times
+        foreach($set as $user) {
+            $t->pass('foreach set as user');
+        }
+    } catch(Exception $e) {
+        $t->fail('foreach set as user');
+    }
+    
+    unset($set);
+    
+    sfRedis::getClient()->flushdb();
