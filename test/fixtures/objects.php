@@ -62,6 +62,11 @@ class UserSet extends sfRedisSetCollection
 {
 }
 
+/** @RedisZSet(has = "User") */
+class UserZSet extends sfRedisZSetCollection
+{
+}
+
 class BrokenObject extends sfRedisObject
 {
 }
