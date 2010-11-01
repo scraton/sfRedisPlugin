@@ -41,7 +41,7 @@ class Comment extends sfRedisObject
     public $author;
     
     /** @RedisField */
-    public $comment;
+    public $content;
     
     /** @RedisField(type = "datetime") */
     public $posted_at;

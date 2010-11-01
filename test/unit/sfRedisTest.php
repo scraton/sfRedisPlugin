@@ -196,15 +196,16 @@ sfRedis::getClient()->flushdb();
     // can even add to the list of comments after persisted
     
     $comment = new Comment();
-    $comment->author  = 'Sally User';
-    $comment->content = 'This comment sucks.';
+    $comment->author  = 'Bob Schmucks';
+    $comment->content = 'This comment is the greatest.';
     
-    try {
-        $post->comments->push($comment);
-        $t->pass('->push() works on an associated collection even after being persisted');
-    } catch(Exception $e) {
-        $t->fail('->push() works on an associated collection even after being persisted');
-    }
+    $post->comments->push($comment);
     
-    //sfRedis::getClient()->flushdb();
+    unset($post, $comment);
+    
+    $post = new BlogPostCommentable('post:1');
+    
+    $t->is($post->comments[2]->content, 'This comment is the greatest.', '->push() works on an already persisted object');
+    
+    sfRedis::getClient()->flushdb();
     

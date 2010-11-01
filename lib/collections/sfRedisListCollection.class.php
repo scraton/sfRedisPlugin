@@ -4,20 +4,32 @@
 class sfRedisListCollection extends sfRedisCollection
 {
     
-    protected function _shift() {
-        return $this->getEntity()->shift();
+    public function shift() {
+        $shift = parent::shift();
+        if($this->isPersisted())
+            return $this->getField()->fromRedis( $this->getEntity()->shift() );
+        else
+            return $shift;
     }
     
-    protected function _pop() {
-        return $this->getEntity()->pop();
+    public function pop() {
+        $pop = parent::pop();
+        if($this->isPersisted())
+            return $this->getField()->fromRedis( $this->getEntity()->pop() );
+        else
+            return $pop;
     }
     
-    protected function _push($value) {
-        return $this->getEntity()->push( $this->getField()->toRedis($value) );
+    public function push($value) {
+        parent::push($value);
+        if($this->isPersisted())
+            return $this->getEntity()->push( $this->getField()->toRedis($value) );
     }
     
-    protected function _unshift($value) {
-        return $this->getEntity()->unshift( $this->getField()->toRedis($value) );
+    public function unshift($value) {
+        parent::unshift($value);
+        if($this->isPersisted())
+            return $this->getEntity()->unshift( $this->getField()->toRedis($value) );
     }
     
     public function getIterator() {
@@ -37,11 +49,11 @@ class sfRedisListCollection extends sfRedisCollection
     }
     
     public function offsetGet($offset) {
-        return $this->getEntity()->offsetGet($offset);
+        return $this->getField()->fromRedis( $this->getEntity()->offsetGet($offset) );
     }
     
     public function offsetSet($offset, $value) {
-        return $this->getEntity()->offsetSet($offset, $value);
+        return $this->getEntity()->offsetSet($offset, $this->getField()->toRedis($value));
     }
     
     public function offsetUnset($offset) {
