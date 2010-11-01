@@ -5,36 +5,31 @@ class sfRedisListCollection extends sfRedisCollection
 {
     
     public function shift() {
-        $shift = parent::shift();
         if($this->isPersisted())
             return $this->getField()->fromRedis( $this->getEntity()->shift() );
         else
-            return $shift;
+            return parent::shift();
     }
     
     public function pop() {
-        $pop = parent::pop();
         if($this->isPersisted())
             return $this->getField()->fromRedis( $this->getEntity()->pop() );
         else
-            return $pop;
+            return parent::pop();
     }
     
     public function push($value) {
-        parent::push($value);
         if($this->isPersisted())
             return $this->getEntity()->push( $this->getField()->toRedis($value) );
+        else
+            parent::push($value);
     }
     
     public function unshift($value) {
-        parent::unshift($value);
         if($this->isPersisted())
             return $this->getEntity()->unshift( $this->getField()->toRedis($value) );
-    }
-    
-    public function getIterator() {
-        $data = $this->_data;
-        return new ArrayIterator($data);
+        else
+            parent::unshift($value);
     }
 
     public function count() {
@@ -53,15 +48,16 @@ class sfRedisListCollection extends sfRedisCollection
     
     public function offsetGet($offset) {
         if($this->isPersisted())
-            $this->_data[$offset] = $this->getField()->fromRedis( $this->getEntity()->offsetGet($offset) );
-        return parent::offsetGet($offset);
+            return $this->getField()->fromRedis( $this->getEntity()->offsetGet($offset) );
+        else
+            return parent::offsetGet($offset);
     }
     
     public function offsetSet($offset, $value) {
-        parent::offsetSet($offset, $value);
-        
         if($this->isPersisted())
             return $this->getEntity()->offsetSet($offset, $this->getField()->toRedis( $this->_data[$offset] ));
+        else
+            parent::offsetSet($offset, $value);
     }
     
     public function offsetUnset($offset) {
