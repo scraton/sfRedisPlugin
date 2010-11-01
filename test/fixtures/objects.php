@@ -34,6 +34,15 @@ class BlogPostCommentable extends BlogPost
 }
 
 /** @RedisEntity */
+class BlogPostTaggable extends BlogPost
+{
+    
+    /** @RedisCollection(type = "set") */
+    public $tags;
+    
+}
+
+/** @RedisEntity */
 class Comment extends sfRedisObject
 {
     
@@ -46,6 +55,11 @@ class Comment extends sfRedisObject
     /** @RedisField(type = "datetime") */
     public $posted_at;
     
+}
+
+/** @RedisSet(has = "User") */
+class UserSet extends sfRedisSetCollection
+{
 }
 
 class BrokenObject extends sfRedisObject

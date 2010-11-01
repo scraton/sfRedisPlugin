@@ -5,7 +5,7 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(13, new lime_output_color());
+$t = new lime_test(16, new lime_output_color());
 
 require_once dirname(__FILE__).'/../fixtures/objects.php';
 
@@ -209,3 +209,32 @@ sfRedis::getClient()->flushdb();
     
     sfRedis::getClient()->flushdb();
     
+// should be able to handle objects with RedisSets as fields
+
+    $t->comment('should be able to handle objects with RedisSets as fields');
+    
+    $user = new User('user:bobuser');
+    $post = new BlogPostTaggable('post:1');
+    
+    $user->nickname = 'bobuser';
+    
+    $post->content = 'This is a test.';
+    $post->author  = $user;
+    
+    $post->tags->add('omgwtfbbq', 'test tag', 'rox my sox');
+    
+    try {
+        $t->ok($em->persist($post), '->persist() should handle redis sets as fields');
+    } catch(Exception $e) {
+        $t->fail('->persist() should handle redis sets as fields');
+        throw $e;
+    }
+    
+    unset($post);
+    
+    $post = new BlogPostTaggable('post:1');
+    
+    $t->is(count($post->tags), 3, '->tags has the correct number of tags');
+    $t->is($post->tags->isMember('omgwtfbbq'), true, '->tags has the correct omgwtfbbq tag as expected');
+    
+    sfRedis::getClient()->flushdb();

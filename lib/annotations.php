@@ -111,8 +111,8 @@ class RedisRelation extends RedisField
  */
 class RedisCollection extends RedisField
 {
-    public $class    = 'sfRedisListCollection';
-    public $entity   = 'sfRedisListEntity';
+    public $class    = null;
+    public $entity   = null;
     public $type     = 'list';
     public $has_type = 'string';
     public $has;
