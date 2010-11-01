@@ -43,6 +43,28 @@ class BlogPostTaggable extends BlogPost
 }
 
 /** @RedisEntity */
+class BlogPostWithMovies extends BlogPost
+{
+    // sue me, I couldn't think of anything clever to add to a blog post that needs to be sorted
+    
+    /** @RedisCollection(type = "zset", has = "Movie") */
+    public $movies;
+    
+}
+
+/** @RedisEntity */
+class Movie extends sfRedisObject
+{
+    
+    /** @RedisIndex */
+    public $title;
+    
+    /** @RedisScore */
+    public $year;
+    
+}
+
+/** @RedisEntity */
 class Comment extends sfRedisObject
 {
     

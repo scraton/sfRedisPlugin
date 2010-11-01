@@ -5,6 +5,7 @@ abstract class sfRedisObject extends sfRedisAbstract
     
     private $_fields     = array();
     private $_indexField = null;
+    private $_scoreField = null;
     
     protected function loadMeta() {
         parent::loadMeta();
@@ -20,6 +21,8 @@ abstract class sfRedisObject extends sfRedisAbstract
             
             if($annotation instanceof RedisIndex)
                 $this->_indexField  = $name;
+            if($annotation instanceof RedisScore)
+                $this->_scoreField  = $name;
             
             if($annotation instanceof RedisField) {
                 if($annotation instanceof RedisCollection)
@@ -45,7 +48,7 @@ abstract class sfRedisObject extends sfRedisAbstract
     }
     
     private static function findAnnotationForField($property) {
-        $annotations = array('RedisIndex', 'RedisField', 'RedisRelation', 'RedisCollection');
+        $annotations = array('RedisIndex', 'RedisScore', 'RedisField', 'RedisRelation', 'RedisCollection');
         foreach($annotations as $a)
             if($property->hasAnnotation($a))
                 return $property->getAnnotation($a);
@@ -78,6 +81,8 @@ abstract class sfRedisObject extends sfRedisAbstract
     public function set($field, $value) {
         if($field == $this->_indexField)
             $this->setIndex($value);
+        if($field == $this->_scoreField)
+            $this->setScore($value);
         
         $this->_set($field, $value);
     }

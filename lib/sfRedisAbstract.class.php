@@ -7,6 +7,7 @@ abstract class sfRedisAbstract
     
     protected $_key       = null;
     protected $_index     = null;
+    protected $_score     = null;
     protected $_meta      = null;
     protected $_data      = array();
     protected $_persisted = false;
@@ -50,6 +51,14 @@ abstract class sfRedisAbstract
     
     public function setIndex($index) {
         $this->_index = $index;
+    }
+    
+    public function getScore() {
+        return $this->_score;
+    }
+    
+    public function setScore($score) {
+        $this->_score = $score;
     }
     
     public function getData() {

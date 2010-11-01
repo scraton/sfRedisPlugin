@@ -93,6 +93,20 @@ class RedisIndex extends RedisField
 {
 }
 
+/**
+ * RedisScore
+ *
+ * @package   sfRedisPlugin
+ * @author    Stephen Craton <scraton@gmail.com>
+ * @license   The MIT License
+ * @version   SVN: $Id$
+ *
+ * @Target("property")
+ */
+class RedisScore extends RedisField
+{
+}
+
 class RedisRelation extends RedisField
 {
     public $type = 'object';

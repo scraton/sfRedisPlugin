@@ -5,7 +5,7 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(17, new lime_output_color());
+$t = new lime_test(20, new lime_output_color());
 
 require_once dirname(__FILE__).'/../fixtures/objects.php';
 
@@ -240,3 +240,52 @@ sfRedis::getClient()->flushdb();
     $t->is(sort($post->tags->getMembers()), array('omgwtfbbq', 'test tag', 'rox my sox'), '->getMembers() returns an array of tags');
     
     sfRedis::getClient()->flushdb();
+    
+// should be able to handle objects with RedisZSets as fields
+
+    $t->comment('should be able to handle objects with RedisSets as fields');
+    
+    $user = new User('user:bobuser');
+    $post = new BlogPostWithMovies('post:1');
+    
+    $user->nickname = 'bobuser';
+    
+    $post->content = 'This is a test.';
+    $post->author  = $user;
+    
+    $rocky = new Movie();
+    $rocky->title = 'Rocky';
+    $rocky->year  = 1976;
+    
+    $post->movies->add($rocky);
+    
+    $rocky2 = new Movie();
+    $rocky2->title = 'Rocky II';
+    $rocky2->year  = 1979;
+    
+    $post->movies->add($rocky2);
+    
+    $rocky3 = new Movie();
+    $rocky3->title = 'Rocky III';
+    $rocky3->year  = 1982;
+    
+    $post->movies->add($rocky3);
+    
+    try {
+        $t->ok($em->persist($post), '->persist() should handle redis zsets as fields');
+    } catch(Exception $e) {
+        $t->fail('->persist() should handle redis sets as fields');
+        throw $e;
+    }
+    
+    unset($post);
+    
+    $post = new BlogPostWithMovies('post:1');
+    
+    $t->is(count($post->movies), 3, '->movies has the correct number of movies');
+    
+    $movies = $post->movies->rangeByScore(1970, 1980);
+    
+    $t->is($movies[0]->title, 'Rocky', '->rangeByScore() returns the correct first movie sorted by score in the range');
+    
+//    sfRedis::getClient()->flushdb();
