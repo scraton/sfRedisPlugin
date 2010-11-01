@@ -1,9 +1,10 @@
 <?php
 
-abstract class sfRedisCollection extends sfRedisAbstract implements Countable, IteratorAggregate, ArrayAccess
+abstract class sfRedisCollection extends sfRedisAbstract implements Countable, Iterator, ArrayAccess
 {
     
     protected $_field;
+    protected $_position = 0;
     
     protected function loadMeta() {
         parent::loadMeta();
@@ -38,5 +39,45 @@ abstract class sfRedisCollection extends sfRedisAbstract implements Countable, I
     public function unshift($value) {
         array_unshift($this->_data, $value);
     }
-        
+    
+    public function count() {
+        return count($this->_data);
+    }
+    
+    public function offsetExists($offset) {
+        return isset($this->_data[$offset]);
+    }
+    
+    public function offsetGet($offset) {
+        return $this->_data[$offset];
+    }
+    
+    public function offsetSet($offset, $value) {
+        $this->_data[$offset] = $value;
+    }
+    
+    public function offsetUnset($offset) {
+        unset($this->_data[$offset]);
+    }
+    
+    public function current() {
+        return $this->offsetGet($this->_position);
+    }
+    
+    public function key() {
+        return $this->_position;
+    }
+    
+    public function next() {
+        ++$this->_position;
+    }
+    
+    public function rewind() {
+        $this->_position = 0;
+    }
+    
+    public function valid() {
+        return $this->offsetExists($this->_position);
+    }
+    
 }

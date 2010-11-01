@@ -38,22 +38,30 @@ class sfRedisListCollection extends sfRedisCollection
     }
 
     public function count() {
-        $cnt = count($this->_data);
         if($this->isPersisted())
-            $cnt = $this->getEntity()->count();
-        return $cnt;
+            return $this->getEntity()->count();
+        else
+            return parent::count();
     }
     
     public function offsetExists($offset) {
-        return ($this->getEntity()->get($offset) !== null);
+        if($this->isPersisted())
+            return ($this->getEntity()->offsetGet($offset) !== null);
+        else
+            return parent::offsetExists($offset);
     }
     
     public function offsetGet($offset) {
-        return $this->getField()->fromRedis( $this->getEntity()->offsetGet($offset) );
+        if($this->isPersisted())
+            $this->_data[$offset] = $this->getField()->fromRedis( $this->getEntity()->offsetGet($offset) );
+        return parent::offsetGet($offset);
     }
     
     public function offsetSet($offset, $value) {
-        return $this->getEntity()->offsetSet($offset, $this->getField()->toRedis($value));
+        parent::offsetSet($offset, $value);
+        
+        if($this->isPersisted())
+            return $this->getEntity()->offsetSet($offset, $this->getField()->toRedis( $this->_data[$offset] ));
     }
     
     public function offsetUnset($offset) {
