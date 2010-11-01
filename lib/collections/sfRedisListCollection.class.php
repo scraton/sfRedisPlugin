@@ -1,35 +1,35 @@
 <?php
 
 /** @RedisList */
-class sfRedisListCollection extends sfRedisCollection
+class sfRedisListCollection extends sfRedisCollection implements ArrayAccess
 {
     
     public function shift() {
         if($this->isPersisted())
             return $this->getField()->fromRedis( $this->getEntity()->shift() );
         else
-            return parent::shift();
+            return array_shift($this->_data);
     }
     
     public function pop() {
         if($this->isPersisted())
             return $this->getField()->fromRedis( $this->getEntity()->pop() );
         else
-            return parent::pop();
+            return array_pop($this->_data);
     }
     
     public function push($value) {
         if($this->isPersisted())
             return $this->getEntity()->push( $this->getField()->toRedis($value) );
         else
-            parent::push($value);
+            array_push($this->_data, $value);
     }
     
     public function unshift($value) {
         if($this->isPersisted())
             return $this->getEntity()->unshift( $this->getField()->toRedis($value) );
         else
-            parent::unshift($value);
+            array_unshift($this->_data, $value);
     }
 
     public function count() {
@@ -43,21 +43,21 @@ class sfRedisListCollection extends sfRedisCollection
         if($this->isPersisted())
             return ($this->getEntity()->offsetGet($offset) !== null);
         else
-            return parent::offsetExists($offset);
+            return isset($this->_data[$offset]);
     }
     
     public function offsetGet($offset) {
         if($this->isPersisted())
             return $this->getField()->fromRedis( $this->getEntity()->offsetGet($offset) );
         else
-            return parent::offsetGet($offset);
+            return $this->_data[$offset];
     }
     
     public function offsetSet($offset, $value) {
         if($this->isPersisted())
             return $this->getEntity()->offsetSet($offset, $this->getField()->toRedis( $this->_data[$offset] ));
         else
-            parent::offsetSet($offset, $value);
+            $this->_data[$offset] = $value;
     }
     
     public function offsetUnset($offset) {
