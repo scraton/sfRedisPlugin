@@ -58,6 +58,13 @@ abstract class sfRedisObject extends sfRedisAbstract
         return $this->_fields;
     }
     
+    public function setIndex($index) {
+        parent::setIndex($index);
+        
+        if($this->_indexField)
+            $this->_set($this->_indexField, $index);
+    }
+    
     public function get($field) {
         $accessor = 'get' . sfInflector::classify($field);
         
