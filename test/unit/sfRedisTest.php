@@ -5,7 +5,7 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(29, new lime_output_color());
+$t = new lime_test(20, new lime_output_color());
 
 require_once dirname(__FILE__).'/../fixtures/objects.php';
 
@@ -290,61 +290,3 @@ sfRedis::getClient()->flushdb();
     
     sfRedis::getClient()->flushdb();
     
-// should be able to getFieldsByName
-
-    $t->comment('should be able to getFieldsByName');
-    
-    $user = new User('user:bobuser');
-    
-    $user->setEmail('bobuser@gmail.com');
-    $t->is($user->email, 'bobuser@gmail.com -- modified', 'can use setter methods for fields that exist');
-    
-    $t->is($user->getEmail(), 'bobuser@gmail.com -- modified', 'can use getter methods even if it isn\'t defined');
-        
-    $user->email = 'bobuser2@gmail.com';
-    $t->is($user->email, 'bobuser2@gmail.com -- modified', 'directly setting the attribute will use the setter method');
-    
-    $user->age = 12;
-    
-    $t->is($user->getAge(), 24, 'can use getter methods for fields that exist');
-    $t->is($user->age, 24, 'directly accessing the attribute will use the getter method');
-    
-    unset($user);
-    
-    sfRedis::getClient()->flushdb();
-    
-// should not be able to access or set fields that don't exist
-
-    $t->comment('should not be able to access or set fields that don\'t exist');
-    
-    $user = new User('user:bobuser');
-    
-    try {
-        $user->unknown = 'kaboom!';
-        $t->fail('cannot set non-existent field using fields');
-    } catch(sfRedisException_UnknownPropertyException $ex) {
-        $t->pass('cannot set non-existent field using fields');
-    }
-    
-    try {
-        $user->setUnknown('kaboom!');
-        $t->fail('cannot set non-existent field using methods');
-    } catch(sfRedisException_UnknownPropertyException $ex) {
-        $t->pass('cannot set non-existent field using methods');
-    }
-    
-    try {
-        var_dump($user->unknown);
-        $t->fail('cannot get non-existent field using fields');
-    } catch(sfRedisException_UnknownPropertyException $ex) {
-        $t->pass('cannot get non-existent field using fields');
-    }
-    
-    try {
-        var_dump($user->getUnknown());
-        $t->fail('cannot get non-existent field using methods');
-    } catch(sfRedisException_UnknownPropertyException $ex) {
-        $t->pass('cannot get non-existent field using methods');
-    }
-    
-    sfRedis::getClient()->flushdb();

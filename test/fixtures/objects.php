@@ -33,6 +33,9 @@ class BlogPost extends sfRedisObject
     /** @RedisField */
     public $content;
     
+    /** @RedisField(type = "datetime") */
+    public $created_at;
+    
 }
 
 /** @RedisEntity */

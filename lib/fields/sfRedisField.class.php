@@ -11,6 +11,9 @@ class sfRedisField
             return sfRedisCollectionField::createFromAnnotation($name, $annotation);
         elseif($annotation instanceof RedisRelation)
             return sfRedisRelationField::createFromAnnotation($name, $annotation);
+            
+        if(in_array($annotation->type, array('date', 'datetime', 'timestamp')))
+            return sfRedisDateTimeField::createFromAnnotation($name, $annotation);
         
         $field       = new sfRedisField($name);
         $field->type = $annotation->type;
