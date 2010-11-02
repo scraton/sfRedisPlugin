@@ -31,3 +31,5 @@ else
   $plugin_configuration = new sfPluginConfigurationGeneric($configuration, dirname(__FILE__).'/../..', 'sfRedisPlugin');
 }
 
+require_once dirname(__FILE__).'/../fixtures/objects.php';
+require_once dirname(__FILE__).'/../../lib/annotations.php';
