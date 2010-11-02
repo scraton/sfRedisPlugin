@@ -10,6 +10,17 @@ class User extends sfRedisObject
     /** @RedisField */
     public $email;
     
+    /** @RedisField */
+    public $age;
+    
+    public function setEmail($email) {
+        return $this->_set('email', $email.' -- modified');
+    }
+    
+    public function getAge() {
+        return ($this->_get('age') * 2);
+    }
+    
 }
 
 /** @RedisEntity */

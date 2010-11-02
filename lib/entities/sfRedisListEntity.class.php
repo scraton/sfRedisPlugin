@@ -27,18 +27,15 @@ class sfRedisListEntity extends sfRedisEntity
     }
     
     public function offsetGet($index) {
-        $value = $this->getClient()->lindex($this->getKey(), $index);
-        return $this->load_value($value, $this->getCollection()->getMeta()->has_type, $this->getCollection()->getMeta()->has);
+        return $this->getClient()->lindex($this->getKey(), $index);
     }
     
     public function pop() {
-        $value = $this->getClient()->rpop($this->getKey());
-        return $this->load_value($value);
+        return $this->getClient()->rpop($this->getKey());
     }
     
     public function shift() {
-        $value = $this->getClient()->lpop($this->getKey());
-        return $this->load_value($value);
+        return $this->getClient()->lpop($this->getKey());
     }
     
     public function push($v) {

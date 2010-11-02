@@ -59,55 +59,6 @@ abstract class sfRedisEntity
         return $this->value;
     }
     
-    protected function load_value($value, $type = 'string', $is_a = null) {
-        switch($type) {
-            case 'relation':
-            case 'object':
-                if(class_exists($is_a))
-                    $value = new $is_a($value);
-                else
-                    throw new sfRedisException('Attempting to load non-existent class `'.$is_a.'`');
-                break;
-                
-            case 'string':
-            default:
-                break;
-        }
-        
-        return $value;
-    }
-    
-    protected function save_value($value, $type = 'string', $is_a = null) {
-        switch($type) {
-            case 'relation':
-            case 'object':
-                $this->getManager()->persist($value);
-                $value = $value->getIndex();
-                break;
-                
-            case 'list':
-            case 'set':
-            case 'zset':
-                if(!$value->isPersisted())
-                    $this->getManager()->persist($value);
-                $value = $value->getKey();
-                break;
-                
-            case 'datetime':
-                // TODO: timezone conversion
-                break;
-                
-            case 'string':
-            default:
-                break;
-        }
-        
-        if(is_object($value))
-            throw new sfRedisException('Value was not serialized in `'.get_class($this).'`');
-        
-        return $value;
-    }
-    
     protected function incrId() {
         return $this->getManager()->getClient()->incr(sprintf(self::INCID_KEY, get_class($this->value)));
     }

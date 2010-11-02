@@ -58,3 +58,7 @@ class sfRedis
 class sfRedisException extends Exception
 {
 }
+
+class sfRedisException_UnknownPropertyException extends sfRedisException
+{
+}

@@ -59,6 +59,12 @@ abstract class sfRedisObject extends sfRedisAbstract
     }
     
     public function get($field) {
+        $accessor = 'get' . sfInflector::classify($field);
+        
+        if(method_exists($this, $accessor)) {
+            return $this->$accessor($field);
+        }
+        
         return $this->_get($field);
     }
     
@@ -75,7 +81,7 @@ abstract class sfRedisObject extends sfRedisAbstract
                 $this->_data[$fieldName] = $field->getDefault();
             return $this->_data[$fieldName];    
         } else
-            return $this->$fieldName;
+            throw new sfRedisException_UnknownPropertyException();
     }
     
     public function set($field, $value) {
@@ -83,6 +89,12 @@ abstract class sfRedisObject extends sfRedisAbstract
             $this->setIndex($value);
         if($field == $this->_scoreField)
             $this->setScore($value);
+            
+        $accessor = 'set' . sfInflector::classify($field);
+        
+        if(method_exists($this, $accessor)) {
+            return $this->$accessor($value, $field);
+        }
         
         $this->_set($field, $value);
     }
@@ -100,7 +112,56 @@ abstract class sfRedisObject extends sfRedisAbstract
             
             $this->_data[$fieldName] = $value;
         } else
-            $this->$fieldName = $value;
+            throw new sfRedisException_UnknownPropertyException();
+    }
+    
+    public function hasField($field) {
+        return isset($this->_fields[$field]);
+    }
+    
+    /**
+     * Provides getter and setter methods.
+     *
+     * @param  string $method    The method name
+     * @param  array  $arguments The method arguments
+     *
+     * @return mixed The returned value of the called method
+     */
+    public function __call($method, $arguments) {
+        if(in_array($verb = substr($method, 0, 3), array('set', 'get'))) {
+            $name = substr($method, 3);
+            
+            if($this->hasField($name)) {
+                $entityNameLower = strtolower($name);
+                if($this->hasField($entityNameLower)) {
+                    $entityName = $entityNameLower;
+                } else {
+                    $entityName = $name;
+                }
+            } else {
+                $underScored = sfInflector::underscore($name);
+                if($this->hasField($underScored)) {
+                    $entityName = $underScored;
+                } else if($this->hasField(strtolower($name))) {
+                    $entityName = strtolower($name);
+                } else {
+                    $camelCase = sfInflector::camelize($name);
+                    $camelCase = strtolower($camelCase[0]).substr($camelCase, 1, strlen($camelCase));
+                    if($this->hasField($camelCase)) {
+                        $entityName = $camelCase;
+                    } else {
+                        $entityName = $underScored;
+                    }
+                }
+            }
+            
+            return call_user_func_array(
+                array($this, $verb),
+                array_merge(array($entityName), $arguments)
+            );
+        }
+        
+        throw new sfRedisException(sprintf('Unknown method %s::%s', get_class($this), $method));
     }
     
 }
