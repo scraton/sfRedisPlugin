@@ -5,7 +5,7 @@ class sfRedisRelationField extends sfRedisField
     
     public $is_a  = null;
     
-    public static function createFromAnnotation($name, RedisRelation $annotation) {
+    public static function createFromAnnotation($name, RedisField $annotation) {
         $field       = new sfRedisRelationField($name);
         $field->type = $annotation->type;
         $field->is_a = $annotation->is_a;

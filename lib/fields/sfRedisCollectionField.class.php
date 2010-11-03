@@ -13,7 +13,7 @@ class sfRedisCollectionField extends sfRedisField
     public $has_type = 'string';
     public $has;
     
-    public static function createFromAnnotation($name, RedisCollection $annotation) {
+    public static function createFromAnnotation($name, RedisField $annotation) {
         $field           = new sfRedisCollectionField($name);
         $field->type     = $annotation->type;
         $field->class    = $annotation->class;
