@@ -148,4 +148,11 @@ class sfRedisZSetCollection extends sfRedisSetCollection
             return $this->getEntity()->score( $this->getField()->toRedis( $this->current() ) );
     }
     
+    public function countByRange($min, $max) {
+        if($this->isPersisted())
+            return $this->getEntity()->count($min, $max);
+        else
+            throw new sfRedisException('This object `'.__CLASS__.'` must be persisted to access `'.__METHOD__.'`');
+    }
+    
 }

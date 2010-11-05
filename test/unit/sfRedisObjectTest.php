@@ -5,7 +5,7 @@
  */
 include dirname(__FILE__).'/../bootstrap/unit.php';
 
-$t = new lime_test(11, new lime_output_color());
+$t = new lime_test(12, new lime_output_color());
 
 sfRedis::getClient()->flushdb();
 
@@ -91,3 +91,37 @@ sfRedis::getClient()->flushdb();
     $t->is($post->created_at, '2010-11-02 12:00:00', 'timezone was retrieved in local timezone');
     
     sfRedis::getClient()->flushdb();
+    
+    date_default_timezone_set('UTC');
+    
+// should use the index field getter if all else fails
+
+    $t->comment('should use the index field getter if all else fails');
+    
+    /** @RedisEntity */
+    class TestObject extends sfRedisObject
+    {
+        /** @RedisIndex */
+        public $id;
+        
+        /** @RedisField */
+        public $field;
+        
+        public function getId() {
+            return 'hello';
+        }
+    }
+    
+    $obj = new TestObject();
+    $obj->field = 'test';
+    
+    sfRedisEntityManager::create()->persist($obj);
+    
+    unset($obj);
+    
+    $obj = new TestObject('hello');
+    
+    $t->ok($obj->field == 'test', 'will use the index field getter if all else fails');
+    
+    sfRedis::getClient()->flushdb();
+    

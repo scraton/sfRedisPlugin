@@ -65,6 +65,15 @@ abstract class sfRedisObject extends sfRedisAbstract
             $this->_set($this->_indexField, $index);
     }
     
+    public function getIndex() {
+        $id = parent::getIndex();
+        
+        if($id === null && $this->_indexField !== null)
+            return $this->get($this->_indexField);
+        else
+            return $id;
+    }
+    
     public function get($field) {
         $accessor = 'get' . sfInflector::classify($field);
         
@@ -169,6 +178,10 @@ abstract class sfRedisObject extends sfRedisAbstract
         }
         
         throw new sfRedisException(sprintf('Unknown method %s::%s', get_class($this), $method));
+    }
+    
+    public function save() {
+        return $this->getEntity()->save();
     }
     
 }

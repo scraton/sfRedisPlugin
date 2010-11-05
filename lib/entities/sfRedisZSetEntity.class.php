@@ -27,8 +27,11 @@ class sfRedisZSetEntity extends sfRedisEntity
         return $this->getClient()->zrevrank($this->getKey(), $member);
     }
     
-    public function count() {
-        return $this->getClient()->zcard($this->getKey());
+    public function count($min = null, $max = null) {
+        if($min === null || $max === null)
+            return $this->getClient()->zcard($this->getKey());
+        else
+            return $this->getClient()->zcount($this->getKey(), $min, $max);
     }
     
     public function isMember($member) {
