@@ -7,6 +7,34 @@ abstract class sfRedisObject extends sfRedisAbstract
     private $_indexField = null;
     private $_scoreField = null;
     
+    protected function cacheMeta() {
+        parent::cacheMeta();
+        
+        $key = sprintf('%s:meta:fields', get_class($this));
+        $this->_metaCache->set($key, serialize($this->_fields));
+    }
+    
+    protected function loadCacheMeta() {
+        parent::loadCacheMeta();
+        
+        $key = sprintf('%s:meta:fields', get_class($this));
+        if($this->_metaCache->has($key)) {
+            $this->_fields = unserialize( $this->_metaCache->get($key, null) );
+            
+            foreach($this->_fields as $field) {
+                $name = $field->name;
+                
+                if($field->is_score)
+                    $this->_scoreField = $field->name;
+                if($field->is_index)
+                    $this->_indexField = $field->name;
+                
+                $this->__set($name, $this->$name);
+                unset($this->$name);
+            }
+        }
+    }
+    
     protected function loadMeta() {
         parent::loadMeta();
         

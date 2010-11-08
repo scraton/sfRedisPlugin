@@ -13,11 +13,22 @@ abstract class sfRedisAbstract
     protected $_persisted = false;
     protected $_entity    = null;
     
+    /**
+     * @var sfRedisCache
+     */
+    protected $_metaCache = null;
+    
     public function __construct($index = null) {
         $this->_key = get_class($this);
         
-        if($this->_meta === null)
+        $this->_metaCache = new sfRedisCache();
+        
+        $this->loadCacheMeta();
+        
+        if($this->_meta === null) {
             $this->loadMeta();
+            $this->cacheMeta();
+        }
         
         $this->setIndex($index);
         
@@ -28,6 +39,17 @@ abstract class sfRedisAbstract
         
         $this->_entity = new $entity_class($this);
         $this->_entity->associate($this);
+    }
+    
+    protected function cacheMeta() {
+        $key = sprintf('%s:meta', get_class($this));
+        $this->_metaCache->set($key, serialize($this->_meta));
+    }
+    
+    protected function loadCacheMeta() {
+        $key = sprintf('%s:meta', get_class($this));
+        if($this->_metaCache->has($key))
+            $this->_meta = unserialize( $this->_metaCache->get($key, null) );
     }
     
     protected function loadMeta() {

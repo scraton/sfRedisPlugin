@@ -6,6 +6,9 @@ class sfRedisField
     public $name  = null;
     public $type  = 'string';
     
+    public $is_index = false;
+    public $is_score = false;
+    
     public static function createFromAnnotation($name, RedisField $annotation) {
         if($annotation instanceof RedisCollection)
             return sfRedisCollectionField::createFromAnnotation($name, $annotation);
@@ -17,6 +20,11 @@ class sfRedisField
         
         $field       = new sfRedisField($name);
         $field->type = $annotation->type;
+        
+        if($annotation instanceof RedisIndex)
+            $field->is_index = true;
+        if($annotation instanceof RedisScore)
+            $field->is_score = true;
         
         return $field;
     }
