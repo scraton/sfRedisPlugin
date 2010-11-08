@@ -15,7 +15,7 @@ class sfRedisDateTimeField extends sfRedisField
         $field->type   = $annotation->type;
         
         switch($field->type) {
-            case 'date':      $field->format = 'Y-m-d'; break;
+            case 'date':      $field->format = 'Y-m-d H:i:s'; break;
             case 'datetime':  $field->format = 'Y-m-d H:i:s'; break;
             case 'timestamp': $field->format = 'U'; break;
         }
@@ -32,6 +32,10 @@ class sfRedisDateTimeField extends sfRedisField
     
     public function toRedis($value) {
         $dt = new DateTime($value, new DateTimeZone(date_default_timezone_get()));
+        
+        if($field->type == 'date')
+            $dt->setTime(0, 0, 0);
+        
         $dt->setTimezone( new DateTimeZone(self::TZ_REDIS) );
         
         return $dt->format($this->format);
