@@ -46,10 +46,8 @@ class sfRedisListEntity extends sfRedisEntity
         return $this->getClient()->lpush($this->getKey(), $v);
     }
     
-    protected function _save(Predis_Client $client = null) {
-        $client = ($client) ? $client : $this->getManager()->getClient();
-        
-        if(!($client instanceof Predis_CommandPipeline))
+    protected function _save() {
+        if(!($this->getClient() instanceof Predis_CommandPipeline))
             $this->pipeline();
         
         $key   = $this->getKey();

@@ -73,9 +73,7 @@ class sfRedisZSetEntity extends sfRedisEntity
     }
 
     protected function _save() {
-        $client = ($client) ? $client : $this->getManager()->getClient();
-        
-        if(!($client instanceof Predis_CommandPipeline))
+        if(!($this->getClient() instanceof Predis_CommandPipeline))
             $this->pipeline();
         
         $key   = $this->getKey();

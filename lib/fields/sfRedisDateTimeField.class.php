@@ -14,14 +14,11 @@ class sfRedisDateTimeField extends sfRedisField
         $field         = new sfRedisDateTimeField($name);
         $field->type   = $annotation->type;
         
-        if($annotation->format !== null)
-            $field->format = $annotation->format;
-        else
-            switch($field->type) {
-                case 'date':      $field->format = 'Y-m-d'; break;
-                case 'datetime':  $field->format = 'Y-m-d H:i:s'; break;
-                case 'timestamp': $field->format = 'U'; break;
-            }
+        switch($field->type) {
+            case 'date':      $field->format = 'Y-m-d'; break;
+            case 'datetime':  $field->format = 'Y-m-d H:i:s'; break;
+            case 'timestamp': $field->format = 'U'; break;
+        }
             
         return $field;
     }
