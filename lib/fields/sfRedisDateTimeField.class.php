@@ -32,10 +32,6 @@ class sfRedisDateTimeField extends sfRedisField
     
     public function toRedis($value) {
         $dt = new DateTime($value, new DateTimeZone(date_default_timezone_get()));
-        
-        if($this->type == 'date')
-            $dt->setTime(0, 0, 0);
-        
         $dt->setTimezone( new DateTimeZone(self::TZ_REDIS) );
         
         return $dt->format($this->format);
