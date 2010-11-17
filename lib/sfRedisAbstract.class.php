@@ -87,6 +87,10 @@ abstract class sfRedisAbstract
         return $this->_data;
     }
     
+    public function setData($v) {
+        $this->_data = $v;
+    }
+    
     /**
      * @return sfRedisEntity
      */

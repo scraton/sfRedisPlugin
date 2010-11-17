@@ -3,6 +3,8 @@
 class sfRedisHashEntity extends sfRedisEntity
 {
     
+    protected $_data = array();
+    
     public function getObject() {
         return $this->value;
     }
@@ -36,8 +38,19 @@ class sfRedisHashEntity extends sfRedisEntity
         }
     }
     
+    public function getData() {
+        return $this->_data;
+    }
+    
+    public function setData($v) {
+        $this->_data = $v;
+    }
+    
     public function get($field) {
-        return $this->getClient()->hget($this->getKey(), $field);
+        if(!isset($this->_data[$field]))
+            return $this->getClient()->hget($this->getKey(), $field);
+        else
+            return $this->_data[$field];
     }
     
     public function set($field, $value) {

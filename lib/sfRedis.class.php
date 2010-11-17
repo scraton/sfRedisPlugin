@@ -10,6 +10,7 @@
  */
 class sfRedis
 {
+  
   /**
    * Array of configuration parameters
    * @var array
