@@ -117,11 +117,11 @@ abstract class sfRedisObject extends sfRedisAbstract
     }
     
     protected function _get($fieldName) {
-        $field = $this->_fields[$fieldName];
+        $field = (isset($this->_fields[$fieldName])) ? $this->_fields[$fieldName] : null;
         if($field instanceof sfRedisField) {
-            if($this->isPersisted() && $this->_data[$fieldName] === null)
+            if($this->isPersisted() && (!isset($this->_data[$fieldName]) || $this->_data[$fieldName] === null))
                 $this->_data[$fieldName] = $field->fromRedis( $this->getEntity()->get($fieldName) );
-            elseif($this->_data[$fieldName] === null)
+            elseif(!isset($this->_data[$fieldName]) || $this->_data[$fieldName] === null)
                 $this->_data[$fieldName] = $field->getDefault();
             return $this->_data[$fieldName];    
         } else
@@ -148,7 +148,7 @@ abstract class sfRedisObject extends sfRedisAbstract
     }
     
     protected function _set($fieldName, $value) {
-        $field = $this->_fields[$fieldName];
+        $field = (isset($this->_fields[$fieldName])) ? $this->_fields[$fieldName] : null;
         
         if($field instanceof sfRedisField) {
             if($this->isPersisted())
